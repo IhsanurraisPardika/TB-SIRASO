@@ -4,8 +4,9 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
 const {PrismaClient} = require('@prisma/client'); // Mengimpor Prisma Client
+const orderRoutes = require('./routes/orderRoutes');
+const transaksiRoutes = require('./routes/transaksiRoutes');
 
-  
 const app = express();
 const port = 3000; // Port yang akan digunakan oleh server
 
@@ -45,13 +46,14 @@ app.use(session({
   secret: 'ihsan',  // Ganti dengan kunci yang lebih aman
   resave: false,
   saveUninitialized: true,
-  }));
+}));
 
 
 // Routing untuk halaman utama dan login
 app.use('/', indexRouter);  // Menggunakan rute untuk halaman utama
 app.use('/users', usersRouter); // Menggunakan rute untuk login dan registrasi
-
+app.use('/', orderRoutes);
+app.use('/', transaksiRoutes);
 
 // Login route
 app.post('/login', async (req, res) => {
@@ -123,6 +125,11 @@ app.use(function(req, res, next) {
   err.status = 404;
   next(err);
 });
+
+
+
+
+
 
 // Menjalankan server di localhost:3000
 app.listen(port, () => {
