@@ -1,16 +1,18 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE `User` (
+    `user_id` INTEGER NOT NULL AUTO_INCREMENT,
+    `fullname` VARCHAR(191) NOT NULL,
+    `username` VARCHAR(191) NOT NULL,
+    `phone` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `status` VARCHAR(191) NOT NULL,
+    `alamat` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
 
-  - The primary key for the `user` table will be changed. If it partially fails, the table could be left without primary key constraint.
-  - You are about to drop the column `id` on the `user` table. All the data in the column will be lost.
-  - Added the required column `user_id` to the `User` table without a default value. This is not possible if the table is not empty.
-
-*/
--- AlterTable
-ALTER TABLE `user` DROP PRIMARY KEY,
-    DROP COLUMN `id`,
-    ADD COLUMN `user_id` INTEGER NOT NULL AUTO_INCREMENT,
-    ADD PRIMARY KEY (`user_id`);
+    UNIQUE INDEX `User_username_key`(`username`),
+    UNIQUE INDEX `User_email_key`(`email`),
+    PRIMARY KEY (`user_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Menu` (
@@ -24,6 +26,7 @@ CREATE TABLE `Menu` (
     `rating` DOUBLE NOT NULL,
     `available` VARCHAR(191) NOT NULL,
     `bahan` VARCHAR(191) NOT NULL,
+    `toko_id` INTEGER NOT NULL,
 
     PRIMARY KEY (`menu_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -103,6 +106,19 @@ CREATE TABLE `Discounts` (
     UNIQUE INDEX `Discounts_kode_diskon_key`(`kode_diskon`),
     PRIMARY KEY (`discount_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Toko` (
+    `toko_id` INTEGER NOT NULL AUTO_INCREMENT,
+    `nama_toko` VARCHAR(191) NOT NULL,
+    `alamat` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `Toko_nama_toko_key`(`nama_toko`),
+    PRIMARY KEY (`toko_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Menu` ADD CONSTRAINT `Menu_toko_id_fkey` FOREIGN KEY (`toko_id`) REFERENCES `Toko`(`toko_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Keranjang` ADD CONSTRAINT `Keranjang_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
