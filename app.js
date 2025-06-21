@@ -52,7 +52,6 @@ app.use(session({
 app.use('/', indexRouter);  // Menggunakan rute untuk halaman utama
 app.use('/users', usersRouter); // Menggunakan rute untuk login dan registrasi
 
-
 // Login route
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -104,7 +103,6 @@ app.get('/users/login', (req, res) => {
 app.get('/users/register', (req, res) => {
   res.render('register');
 });
-
 
 // Error handling
 app.use(function(req, res, next) {
