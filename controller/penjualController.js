@@ -17,6 +17,23 @@ const renderKelolaMenu = async (req, res) => {
   }
 };
 
+// Hapus menu
+const hapusMenu = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.menu.delete({
+      where: {
+        menu_id: parseInt(id),
+      },
+    });
+    res.redirect('/penjual/kelolamenu');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Gagal menghapus menu.');
+  }
+};
+
 // Simpan menu ke database
 const tambahMenu = async (req, res) => {
   const { nama_makanan, deskripsi, kategori, harga, stok, gambar_url } = req.body;
@@ -44,8 +61,48 @@ const tambahMenu = async (req, res) => {
   }
 };
 
+// Tampilkan form edit
+const renderEditMenu = async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const menu = await prisma.menu.findUnique({ where: { menu_id: id } });
+    res.render('penjual/editmenu', { menu });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Gagal menampilkan data menu.');
+  }
+};
+
+// Proses update menu
+const updateMenu = async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { nama_makanan, deskripsi, kategori, harga, stok, gambar_url } = req.body;
+
+  try {
+    await prisma.menu.update({
+      where: { menu_id: id },
+      data: {
+        nama_makanan,
+        deskripsi,
+        kategori,
+        harga: parseInt(harga),
+        stok: parseInt(stok),
+        gambar_url,
+      },
+    });
+    res.redirect('/penjual/kelolamenu');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Gagal mengupdate menu.');
+  }
+};
+
+// Export semua fungsi
 module.exports = {
   renderTambahMenu,
   renderKelolaMenu,
   tambahMenu,
+  hapusMenu,
+  renderEditMenu,
+  updateMenu,
 };

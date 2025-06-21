@@ -11,4 +11,13 @@ router.get('/tambahmenu', penjualController.renderTambahMenu);
 // Rute POST
 router.post('/tambahmenu', penjualController.tambahMenu);
 
+//hapus menu
+router.post('/hapusmenu/:id', penjualController.hapusMenu);
+
+// Tampilkan form edit menu
+router.get('/editmenu/:id', penjualController.renderEditMenu);
+
+// Proses update menu
+router.post('/editmenu/:id', penjualController.updateMenu);
+
 module.exports = router;
