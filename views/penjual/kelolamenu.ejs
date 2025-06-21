@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kelola Menu - Penjual</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body class="flex min-h-screen bg-white">
+
+  <!-- Sidebar -->
+  <aside class="w-1/5 bg-green-900 text-white flex flex-col p-6 space-y-6">
+    <h1 class="text-lg font-semibold">Nama tempat..</h1>
+    <nav class="flex flex-col space-y-2">
+      <a href="#" class="flex items-center space-x-2 hover:bg-green-800 p-2 rounded transition">
+        <i class="fas fa-home"></i><span>Dashboard penjual</span>
+      </a>
+      <a href="#" class="flex items-center space-x-2 bg-white text-green-900 p-2 rounded">
+        <i class="fas fa-utensils text-green-900"></i><span>Kelola Menu</span>
+      </a>
+      <a href="#" class="flex items-center space-x-2 hover:bg-green-800 p-2 rounded transition">
+        <i class="fas fa-chart-bar"></i><span>Laporan</span>
+      </a>
+      <a href="#" class="flex items-center space-x-2 hover:bg-green-800 p-2 rounded transition">
+        <i class="fas fa-receipt"></i><span>Pesanan</span>
+      </a>
+      <a href="#" class="flex items-center space-x-2 hover:bg-green-800 p-2 rounded transition">
+        <i class="fas fa-cog"></i><span>Setting</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="w-4/5 p-6 bg-gradient-to-b from-green-100 to-white rounded-l-3xl">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-3xl font-semibold text-green-900 bg-green-700 text-white px-6 py-2 rounded-full">Kelola Menu</h2>
+      <a href="/penjual/tambahmenu" class="bg-green-700 text-white px-4 py-2 rounded-full hover:bg-green-800">Tambah Menu</a>
+    </div>
+
+    <script>
+  function editMenu(id) {
+    alert('Edit menu dengan ID: ' + id);
+    // Nanti diarahkan ke form edit atau buka modal
+  }
+
+  function hapusMenu(id) {
+    if (confirm('Yakin ingin menghapus menu ini?')) {
+      alert('Menghapus menu dengan ID: ' + id);
+      // Nanti bisa kirim fetch ke /delete endpoint
+    }
+  }
+</script>
+
+
+    <!-- Statistik -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-green-200 text-center rounded-2xl py-6">
+        <p class="text-lg">Total Menu</p>
+        <p class="text-2xl font-bold">4</p>
+      </div>
+      <div class="bg-green-200 text-center rounded-2xl py-6">
+        <p class="text-lg">Menu Tersedia</p>
+        <p class="text-2xl font-bold">2</p>
+      </div>
+      <div class="bg-green-200 text-center rounded-2xl py-6">
+        <p class="text-lg">Stok Habis</p>
+        <p class="text-2xl font-bold">2</p>
+      </div>
+    </div>
+
+    <!-- Tabel Menu -->
+    <div class="bg-white rounded-2xl shadow overflow-x-auto">
+      <table class="w-full table-auto text-sm text-left">
+        <thead class="text-green-800 border-b">
+          <tr>
+            <th class="p-4">Menu</th>
+            <th class="p-4">Kategori</th>
+            <th class="p-4">Harga</th>
+            <th class="p-4">Stok</th>
+            <th class="p-4">Rating</th>
+            <th class="p-4 text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="hover:bg-green-50 border-b">
+            <td class="flex items-center gap-4 p-4">
+              <img src="/images/chickenkatsu.jpg" alt="Chicken Katsu" class="w-12 h-12 rounded object-cover" />
+              <div>
+                <p class="font-semibold">Chicken Katsu</p>
+                <p class="text-xs text-gray-500">Nasi Chicken Katsu adalah hidangan berupa nasi hangat yang disajikan dengan ayam katsu goreng</p>
+              </div>
+            </td>
+            <td class="p-4">Nasi & ayam</td>
+            <td class="p-4">Rp15.000</td>
+            <td class="p-4">10</td>
+            <td class="p-4">⭐ 4</td>
+            <td class="p-4 text-center space-x-2">
+    
+<td class="p-4 text-center space-x-2">
+  <!-- Tombol Edit -->
+  <button onclick="editMenu('1')" class="inline-flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded transition">
+    <i class="fa-solid fa-pen"></i>
+  </button>
+
+  <!-- Tombol Hapus -->
+  <button onclick="hapusMenu('1')" class="inline-flex items-center justify-center w-8 h-8 text-white bg-red-600 hover:bg-red-700 rounded transition">
+    <i class="fa-solid fa-trash"></i>
+  </button>
+</td>
+
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

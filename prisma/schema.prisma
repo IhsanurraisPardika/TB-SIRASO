@@ -27,11 +27,11 @@ model Menu {
   nama_makanan   String
   deskripsi      String
   kategori       String
-  harga          String
+  harga          Int
   stok           Int
   gambar_url     String
   rating         Float
-  available      String
+  available      Boolean
   bahan          String
   toko           Toko      @relation(fields: [toko_id], references: [toko_id]) // Menambahkan relasi dengan Toko
   toko_id        Int       // Menyimpan ID toko (cafe)

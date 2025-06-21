@@ -105,6 +105,12 @@ app.get('/users/register', (req, res) => {
   res.render('register');
 });
 
+//kelola menu
+const penjualRouter = require('./routes/penjual');
+app.use('/penjual', penjualRouter);
+
+
+
 
 // Error handling
 app.use(function(req, res, next) {
@@ -117,5 +123,6 @@ app.use(function(req, res, next) {
 app.listen(port, () => {
   console.log(`Server berjalan di http://localhost:${port}`);
 });
+
 
 module.exports = app;
