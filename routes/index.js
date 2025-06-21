@@ -255,6 +255,7 @@ router.get('/generate-pdf/:transactionId', async (req, res) => {
 });
 
 router.get('/pesanan', (req, res) => {
+  console.log('Session user:', req.session.user);  // Menampilkan data user yang ada di session
   // Cek apakah user sudah login
   if (!req.session.user) {
     return res.redirect('/users/login'); // Jika belum login, redirect ke halaman login

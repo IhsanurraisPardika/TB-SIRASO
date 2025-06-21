@@ -8,17 +8,15 @@ const loginUser = async (req, res) => {
   // Validasi form input
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.render('login', { error: errors.array()[0].msg }); // Menampilkan error jika validasi gagal
+    return res.render('login', { error: errors.array().map(err => err.msg).join(", ") }); // Menampilkan semua error
   }
 
   const { username, password } = req.body;
 
   try {
-    // Mencari user berdasarkan username dan email
+    // Mencari user berdasarkan username
     const user = await prisma.user.findUnique({
-      where: {
-        username: username
-      },
+      where: { username: username },
     });
 
     // Jika user tidak ditemukan
@@ -40,8 +38,9 @@ const loginUser = async (req, res) => {
     // Arahkan ke halaman home setelah login sukses
     res.redirect('/home');
   } catch (error) {
-    console.error(error);
+    console.error('Error during login:', error);
     res.status(500).send('Terjadi kesalahan pada server.');
   }
 };
+
 module.exports = { loginUser };
