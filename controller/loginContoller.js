@@ -14,7 +14,7 @@ const loginUser = async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Mencari user berdasarkan username
+    // Mencari user berdasarkan username dan email
     const user = await prisma.user.findUnique({
       where: {
         username: username

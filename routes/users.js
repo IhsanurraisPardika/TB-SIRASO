@@ -15,11 +15,11 @@ router.get('/login', (req, res) => {
 
 // Rute POST untuk login
 router.post('/login', (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  // Mencari user berdasarkan username
+  // Mencari user berdasarkan email
   prisma.user.findUnique({
-    where: { username: username }
+    where: { email: email }
   })
   .then(user => {
     if (!user) {
@@ -75,5 +75,17 @@ router.post('/home', (req, res) => {
   // Misalnya, simpan data atau tampilkan pesan sukses
   res.redirect('/users/home'); // Redirect ke halaman home
 });
+
+router.get('/menu', async (req, res) => {
+    try {
+        const Menu = await prisma.menu.findMany();
+        console.log(Menu); // Menampilkan data menu di console untuk debugging
+        res.json(Menu);
+    } catch (error) {
+        console.error('Error fetching menu:', error);
+        res.status(500).json({ error: 'Terjadi kesalahan saat mengambil menu' });
+    }
+});
+
 
 module.exports = router;

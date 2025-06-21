@@ -1,11 +1,12 @@
-const express = require('express');
+const express = require('express'); 
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
-const {PrismaClient} = require('@prisma/client'); // Mengimpor Prisma Client
+const { PrismaClient } = require('@prisma/client'); // Mengimpor Prisma Client
+const orderRoutes = require('./routes/orderRoutes');
+const transaksiRoutes = require('./routes/transaksiRoutes');
 
-  
 const app = express();
 const port = 3000; // Port yang akan digunakan oleh server
 
@@ -14,17 +15,18 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users'); 
 require('dotenv').config(); // Menggunakan dotenv untuk mengelola variabel lingkungan
 
+const prisma = new PrismaClient(); // Inisialisasi Prisma Client (penting!)
 
 app.post("/addUsers", async (req, res) => {
   const user = req.body; // Mengambil data user dari request body
   const result = await prisma.user.create({
     data: user // Menyimpan data user ke database
-  })
-  res.send(result)
+  });
+  res.send(result);
 });  
 
 app.use(session({
-  secret: process.env.SESSION_SECRET, // Mengambil secret dari .env
+  secret: process.env.SESSION_SECRET || 'ihsan',  // Ambil dari .env, fallback default
   resave: false,
   saveUninitialized: true,
 }));
@@ -40,17 +42,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Middleware session
-app.use(session({
-  secret: 'ihsan',  // Ganti dengan kunci yang lebih aman
-  resave: false,
-  saveUninitialized: true,
-  }));
+// Routing
+app.use('/', indexRouter);            // Rute utama
+app.use('/users', usersRouter);       // Rute untuk user (login/register)
+app.use('/', orderRoutes);            // Rute untuk pesanan
+app.use('/', transaksiRoutes);        // Rute untuk transaksi
 
-
-// Routing untuk halaman utama dan login
-app.use('/', indexRouter);  // Menggunakan rute untuk halaman utama
-app.use('/users', usersRouter); // Menggunakan rute untuk login dan registrasi
+const bcrypt = require('bcrypt'); // Tambahkan jika login pakai bcrypt
 
 // Login route
 app.post('/login', async (req, res) => {
@@ -58,7 +56,7 @@ app.post('/login', async (req, res) => {
 
   try {
     // Mencari pengguna berdasarkan email
-    const user = await prisma.user({ email });
+    const user = await prisma.user.findUnique({ where: { email } });
 
     // Jika user tidak ditemukan
     if (!user) {
@@ -74,6 +72,7 @@ app.post('/login', async (req, res) => {
 
     // Mengatur session setelah login berhasil
     req.session.user = user; // Menyimpan user ke session
+    req.session.userId = user.id;
 
     // Redirect ke halaman home setelah login berhasil
     res.redirect('/home');
@@ -102,6 +101,17 @@ app.get('/users/login', (req, res) => {
 // Halaman register
 app.get('/users/register', (req, res) => {
   res.render('register');
+});
+
+// Halaman pesanan
+app.get('/users/pesanan', (req, res) => {
+  // Cek apakah user sudah login
+  if (!req.session.userId) {
+    return res.redirect('/users/login'); // Jika belum login, alihkan ke halaman login
+  }
+
+  // Menampilkan halaman pesanan jika user sudah login
+  res.render('pesanan', { userId: req.session.userId });
 });
 
 // Error handling

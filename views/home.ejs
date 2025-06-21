@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <title>Home - SIRASO BC</title>
@@ -24,7 +24,7 @@
     <%- include('partials/header') %> <!-- Menggunakan partial header.ejs -->
 
     <!-- Advertisement -->
-    <div class="flex justify-between items-center ">
+    <div class="flex justify-between items-center">
       <div class="flex-1 text-center">
         <img src="/images/bc.jpg" alt="Advertisement" class="w-full h-40 object-cover">
       </div>
@@ -35,61 +35,11 @@
       <!-- Sidebar -->
       <%- include('partials/sidebar') %> <!-- Menggunakan partial sidebar.ejs -->
 
-      <!-- Menu Section -->
-      <div class="w-3/4 p-4">
-        <h3 class="text-2xl font-semibold mb-6 text-green-700">Menu Favorit</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          <!-- Menu Item -->
-          <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="/images/katsu.jpg" alt="Chicken Katsu" class="w-full h-40 object-cover">
-            <div class="p-4">
-              <p class="font-semibold text-lg">Chicken Katsu</p>
-              <p class="text-gray-500">Rp. 15.000</p>
-              <div class="flex space-x-2 mt-2">
-                <button class="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Detail</button>
-                <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Pesan</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Menu Item -->
-          <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="/images/nasgor.jpeg" alt="Nasi Goreng" class="w-full h-40 object-cover">
-            <div class="p-4">
-              <p class="font-semibold text-lg">Nasi Goreng</p>
-              <p class="text-gray-500">Rp. 12.000</p>
-              <div class="flex space-x-2 mt-2">
-                <button class="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Detail</button>
-                <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Pesan</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Menu Item -->
-          <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="/images/bakso.jpeg" alt="Bakso" class="w-full h-40 object-cover">
-            <div class="p-4">
-              <p class="font-semibold text-lg">Bakso</p>
-              <p class="text-gray-500">Rp. 15.000</p>
-              <div class="flex space-x-2 mt-2">
-                <button class="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Detail</button>
-                <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Pesan</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Menu Item -->
-          <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="/images/batagor.jpg" alt="Batagor" class="w-full h-40 object-cover">
-            <div class="p-4">
-              <p class="font-semibold text-lg">Batagor</p>
-              <p class="text-gray-500">Rp. 8.000</p>
-              <div class="flex space-x-2 mt-2">
-                <button class="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Detail</button>
-                <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Pesan</button>
-              </div>
-            </div>
-          </div>
+      <!-- Menu Section (kosong dulu)-->
+      <div class="w-4/5 p-4 shadow-lg border rounded-lg" id="menuContainer">
+        <h3 class="text-2xl font-semibold mb-6 text-green-700">Menu</h3>
+        <div id="menuGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <!-- Konten menu akan diisi dengan AJAX -->
         </div>
       </div>
     </div>
@@ -99,5 +49,48 @@
   <!-- Footer -->
   <%- include('partials/footer') %> <!-- Menggunakan partial footer.ejs -->
 
+  <script>
+    // Ketika pengguna memilih cafe, data menu akan diambil
+    document.querySelectorAll('.cafe-link').forEach(cafeLink => {
+      cafeLink.addEventListener('click', function() {
+        const cafeName = this.getAttribute('data-cafe-name');
+        
+        // Lakukan permintaan AJAX untuk mengambil data menu dari server berdasarkan nama cafe
+        fetch(`/menus/${cafeName}`)
+          .then(response => response.json())
+          .then(data => {
+            const menuGrid = document.getElementById('menuGrid');
+            menuGrid.innerHTML = '';  // Kosongkan grid sebelum menampilkan menu baru
+
+            if (data.length > 0) {
+              data.forEach(menu => {
+                // Tampilkan menu favorit di grid
+                const menuItem = document.createElement('div');
+                menuItem.classList.add('bg-white', 'rounded-lg', 'shadow-md', 'overflow-hidden');
+
+                menuItem.innerHTML = `
+                  <img src="${menu.gambar_url}" alt="${menu.nama_makanan}" class="w-full h-40 object-cover">
+                  <div class="p-4">
+                    <p class="font-semibold text-lg">${menu.nama_makanan}</p>
+                    <p class="text-gray-500">Rp. ${menu.harga}</p>
+                    <div class="flex space-x-2 mt-2">
+                      <button class="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Detail</button>
+                      <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Pesan</button>
+                    </div>
+                  </div>
+                `;
+
+                menuGrid.appendChild(menuItem);
+              });
+            } else {
+              menuGrid.innerHTML = '<p class="text-center text-gray-500">Menu tidak tersedia untuk cafe ini.</p>';
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching menu data:', error);
+          });
+      });
+    });
+  </script>
 </body>
 </html>
