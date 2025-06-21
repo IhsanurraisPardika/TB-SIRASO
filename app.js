@@ -105,6 +105,17 @@ app.get('/users/register', (req, res) => {
   res.render('register');
 });
 
+// Halaman pesanan
+app.get('/users/pesanan', (req, res) => {
+  // Cek apakah user sudah login
+  if (!req.session.userId) {
+    return res.redirect('/users/login'); // Jika belum login, alihkan ke halaman login
+  }
+
+  // Menampilkan halaman pesanan jika user sudah login
+  res.render('pesanan', { userId: req.session.userId });
+});
+
 
 // Error handling
 app.use(function(req, res, next) {
