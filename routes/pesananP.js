@@ -3,16 +3,17 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const penjualController = require('../controller/penjualController');
-
-// ==== ROUTE PESANAN (dari pesananP.js) ====
-router.get('/pesanan', async (req, res) => {
+router.get('/pesanan', async (req, res) => { // ✅ cukup "/pesanan" saja
   try {
     const tokoId = 1;
 
     const semuaTransaksi = await prisma.transactions.findMany({
-      include: { user: true },
-      orderBy: { tanggal_transaksi: 'desc' }
+      include: {
+        user: true
+      },
+      orderBy: {
+        tanggal_transaksi: 'desc'
+      }
     });
 
     const hasilTransaksi = [];
@@ -25,7 +26,9 @@ router.get('/pesanan', async (req, res) => {
             toko_id: tokoId
           }
         },
-        include: { menu: true }
+        include: {
+          menu: true
+        }
       });
 
       if (keranjang.length > 0) {
@@ -43,13 +46,5 @@ router.get('/pesanan', async (req, res) => {
     res.status(500).send('Gagal mengambil data transaksi');
   }
 });
-
-// ==== ROUTE KELOLA MENU (yang sudah kamu punya) ====
-router.get('/kelolamenu', penjualController.renderKelolaMenu);
-router.get('/tambahmenu', penjualController.renderTambahMenu);
-router.post('/tambahmenu', penjualController.tambahMenu);
-router.post('/hapusmenu/:id', penjualController.hapusMenu);
-router.get('/editmenu/:id', penjualController.renderEditMenu);
-router.post('/editmenu/:id', penjualController.updateMenu);
 
 module.exports = router;

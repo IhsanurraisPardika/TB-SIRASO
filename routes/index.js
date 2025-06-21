@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const prisma = require('@prisma/client');
-const { PrismaClient } = prisma;
+//const prisma = require('@prisma/client');
+//const { PrismaClient } = prisma;
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 // Halaman login
 router.get('/login', (req, res) => {
@@ -124,8 +126,31 @@ router.get('/', (req, res) => {
 });
 
 // Rute untuk halaman pesanan
-router.get('/pesanan', async (req, res) => {  
-  res.render('pesanan', { foods: foods, total: total }); // Kirim data ke halaman pesanan
+//router.get('/pesanan', async (req, res) => {  
+  //res.render('pesanan', { foods: foods, total: total }); // Kirim data ke halaman pesanan
+//});
+router.get('/pesanan', async (req, res) => {
+  try {
+    const foods = await prisma.transactions.findMany({
+      include: {
+        user: true,
+        pickup_schedule: true
+      },
+      orderBy: {
+        tanggal_transaksi: 'desc'
+      }
+    });
+
+    let total = 0;
+    for (const food of foods) {
+      total += food.total_price;
+    }
+
+    res.render('pesanan', { foods, total });
+  } catch (error) {
+    console.error('Gagal ambil data pesanan:', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 

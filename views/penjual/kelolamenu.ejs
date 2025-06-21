@@ -9,26 +9,7 @@
 <body class="flex min-h-screen bg-white">
 
   <!-- Sidebar -->
-  <aside class="w-1/5 bg-green-900 text-white flex flex-col p-6 space-y-6">
-    <h1 class="text-lg font-semibold">Nama tempat..</h1>
-    <nav class="flex flex-col space-y-2">
-      <a href="#" class="flex items-center space-x-2 hover:bg-green-800 p-2 rounded transition">
-        <i class="fas fa-home"></i><span>Dashboard penjual</span>
-      </a>
-      <a href="#" class="flex items-center space-x-2 bg-white text-green-900 p-2 rounded">
-        <i class="fas fa-utensils text-green-900"></i><span>Kelola Menu</span>
-      </a>
-      <a href="#" class="flex items-center space-x-2 hover:bg-green-800 p-2 rounded transition">
-        <i class="fas fa-chart-bar"></i><span>Laporan</span>
-      </a>
-      <a href="#" class="flex items-center space-x-2 hover:bg-green-800 p-2 rounded transition">
-        <i class="fas fa-receipt"></i><span>Pesanan</span>
-      </a>
-      <a href="#" class="flex items-center space-x-2 hover:bg-green-800 p-2 rounded transition">
-        <i class="fas fa-cog"></i><span>Setting</span>
-      </a>
-    </nav>
-  </aside>
+<%- include('../partials/sidebarpenjual') %>
 
   <!-- Main Content -->
   <main class="w-4/5 p-6 bg-gradient-to-b from-green-100 to-white rounded-l-3xl">

@@ -2,8 +2,12 @@
 const express = require('express');
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  res.render('pesanan', { active: 'pesanan' }); // Pastikan 'pesanan.ejs' ada di folder 'views'
+router.get('/pesanan', (req, res) => {
+  res.render('pesanan', {
+    foods: [],   // Kirim array kosong supaya tidak error di EJS
+    total: 0     // Total 0
+  });
 });
+
 
 module.exports = router;

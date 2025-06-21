@@ -107,4 +107,13 @@ model Toko {
   nama_toko     String   @unique
   alamat        String
   menu          Menu[]   // Relasi satu ke banyak dengan Menu
+   seller        Seller?  // Relasi satu ke satu dengan Seller (penjual)
+}
+
+model Seller {
+  seller_id    Int      @id @default(autoincrement())  // ID Penjual
+  username     String   @unique                       // Username Penjual
+  password     String   // Password Penjual
+  toko         Toko     @relation(fields: [toko_id], references: [toko_id]) // Relasi dengan Toko
+  toko_id      Int      @unique                       // ID Toko yang dimiliki oleh penjual, ditandai dengan @unique
 }
