@@ -76,15 +76,16 @@ router.post('/home', (req, res) => {
   res.redirect('/users/home'); // Redirect ke halaman home
 });
 
-
-router.get('/pesanan', (req, res) => {
-  // Cek apakah user sudah login
-  if (!req.session.user) {
-    return res.redirect('/users/login'); // Jika belum login, redirect ke halaman login
-  }
-
-  // Render halaman pesanan jika user sudah login
-  res.render('pesanan', { user: req.session.user });
+router.get('/menu', async (req, res) => {
+    try {
+        const Menu = await prisma.menu.findMany();
+        console.log(Menu); // Menampilkan data menu di console untuk debugging
+        res.json(Menu);
+    } catch (error) {
+        console.error('Error fetching menu:', error);
+        res.status(500).json({ error: 'Terjadi kesalahan saat mengambil menu' });
+    }
 });
+
 
 module.exports = router;
