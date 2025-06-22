@@ -108,9 +108,44 @@ router.get('/home', async (req, res) => {
   }
 });
 
-// Halaman pencarian
-router.get('/pencarian', function(req, res, next) {
+// pencarian
+router.get('/pencarian', (req, res) => {
   res.render('pencarian');
+});
+
+// Halaman All
+router.get('/All', function(req, res, next) {
+  res.render('All');
+});
+
+// Halaman kategori
+router.get('/kategori', function(req, res, next) {
+  res.render('kategori');
+});
+
+// Halaman jenis
+router.get('/jenis', function(req, res, next) {
+  res.render('jenis');
+});
+
+// Halaman rentang_harga
+router.get('/rentang_harga', function(req, res, next) {
+  res.render('rentang_harga');
+});
+
+// Halaman rating
+router.get('/rating', function(req, res, next) {
+  res.render('rating');
+});
+
+// Halaman populer
+router.get('/populer', function(req, res, next) {
+  res.render('populer');
+});
+
+// Halaman download_menu
+router.get('/download_menu', function(req, res, next) {
+  res.render('download_menu');
 });
 
 // Post untuk register

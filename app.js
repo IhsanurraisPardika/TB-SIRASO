@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); 
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -20,6 +20,20 @@ const app = express();
 const port = 3000;
 const prisma = new PrismaClient();
 
+app.post("/addUsers", async (req, res) => {
+  const user = req.body; // Mengambil data user dari request body
+  const result = await prisma.user.create({
+    data: user // Menyimpan data user ke database
+  });
+  res.send(result);
+});  
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'ihsan',  // Ambil dari .env, fallback default
+  resave: false,
+  saveUninitialized: true,
+}));
+=======
 // Import rute yang diperlukan
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -44,13 +58,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 // View engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// Routing dasar
-const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
 const penjualRouter = require('./routes/penjual');
 const pesananPRouter = require('./routes/pesananP');
 
@@ -96,10 +108,17 @@ app.post('/login', async (req, res) => {
     const user = await prisma.user.findUnique({ where: { email } }); // ✅ pakai findUnique
     if (!user) return res.status(400).json({ error: 'User tidak ditemukan' });
 
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) return res.status(400).json({ error: 'Password salah' });
+    // Mengatur session setelah login berhasil
+    req.session.user = user; // Menyimpan user ke session
+    req.session.userId = user.id;
+
+    // Redirect ke halaman home setelah login berhasil
 
     req.session.userId = user.id; // Simpan ID saja, lebih aman
+
     res.redirect('/home');
   } catch (error) {
     console.error(error);
@@ -163,6 +182,7 @@ app.use(function(err, req, res, next) {
 });
 
 // Jalankan server
+
 app.listen(port, () => {
   console.log(`Server berjalan di http://localhost:${port}`);
 });
