@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  
 }
 
 datasource db {
@@ -9,88 +8,86 @@ datasource db {
 }
 
 model User {
-  user_id        Int       @id @default(autoincrement())
-  fullname       String
-  username       String    @unique
-  phone          String
-  password       String
-  status         String
-  alamat         String
-  email          String    @unique
-  transactions   Transactions[]
-  reviews        Review[]
-  keranjang      Keranjang[]
+  user_id      Int            @id @default(autoincrement())
+  fullname     String
+  username     String         @unique
+  phone        String
+  password     String
+  status       String
+  alamat       String
+  email        String         @unique
+  transactions Transactions[]
+  reviews      Review[]
+  keranjang    Keranjang[]
 }
 
 model Menu {
-  menu_id        Int       @id @default(autoincrement())
-  nama_makanan   String
-  deskripsi      String
-  kategori       String
-  harga          String
-  stok           Int
-  gambar_url     String
-  rating         Float
-  available      String
-  bahan          String
-  toko           Toko      @relation(fields: [toko_id], references: [toko_id]) // Menambahkan relasi dengan Toko
-  toko_id        Int       // Menyimpan ID toko (cafe)
-  reviews        Review[]  
-  keranjang      Keranjang[]
+  menu_id      Int         @id @default(autoincrement())
+  nama_makanan String
+  deskripsi    String?
+  kategori     String
+  harga        Float
+  stok         Int
+  gambar_url   String?
+  available    Boolean     @default(true)
+  toko         Toko        @relation(fields: [toko_id], references: [toko_id])
+  toko_id      Int
+  keranjang    Keranjang[] //relasi balik keranjang
+  reviews      Review[] // relasi balik review
 }
 
 model Keranjang {
-  keranjang_id       Int       @id @default(autoincrement())
-  user               User      @relation(fields: [user_id], references: [user_id])
-  user_id            Int
-  menu               Menu      @relation(fields: [menu_id], references: [menu_id])
-  menu_id            Int
-  jumlah             Int
-  waktu_pengambilan  DateTime
+  keranjang_id      Int      @id @default(autoincrement())
+  user              User     @relation(fields: [user_id], references: [user_id])
+  user_id           Int
+  menu              Menu     @relation(fields: [menu_id], references: [menu_id])
+  menu_id           Int
+  jumlah            Int
+  waktu_pengambilan DateTime
 }
 
 model Transactions {
-  transaction_id     Int              @id @default(autoincrement())
-  user               User             @relation(fields: [user_id], references: [user_id])
-  user_id            Int
-  total_price        Float
-  metode_pembayaran  String
-  status_pembayaran  String
-  kode_diskon        String?
-  tanggal_transaksi  DateTime         @default(now())
-  bukti_pembayaran   String?
+  transaction_id       Int             @id @default(autoincrement())
+  user                 User            @relation(fields: [user_id], references: [user_id])
+  user_id              Int
+  total_price          Float
+  metode_pembayaran    String
+  status_pembayaran    String
+  kode_diskon          String?
+  tanggal_transaksi    DateTime        @default(now())
+  bukti_pembayaran     String?
   riwayat_pengembalian String?
-  pickup_schedule    PickupSchedule?
+  pickup_schedule      PickupSchedule?
 }
 
 model PickupSchedule {
-  pickup_id          Int             @id @default(autoincrement())
-  transaction        Transactions    @relation(fields: [transaction_id], references: [transaction_id])
-  transaction_id     Int             @unique
+  pickup_id          Int          @id @default(autoincrement())
+  transaction        Transactions @relation(fields: [transaction_id], references: [transaction_id])
+  transaction_id     Int          @unique
   waktu_pengambilan  DateTime
   status_pengambilan Boolean
   nomor_antrian      Int
 }
 
 model SalesReports {
-  report_id                Int       @id @default(autoincrement())
-  admin_id                 Int
-  tanggal_awal             DateTime
-  tanggal_akhir            DateTime
-  total_pendapatan         Float
-  total_pesanan            Int
-  total_pengembalian_dana  Float
+  report_id               Int      @id @default(autoincrement())
+  admin_id                Int
+  tanggal_awal            DateTime
+  tanggal_akhir           DateTime
+  total_pendapatan        Float
+  total_pesanan           Int
+  total_pengembalian_dana Float
 }
 
 model Review {
-  review_id      Int       @id @default(autoincrement())
-  user           User      @relation(fields: [user_id], references: [user_id])
-  user_id        Int
-  menu           Menu      @relation(fields: [menu_id], references: [menu_id])
-  menu_id        Int
-  rating         Int
-  komentar       String
-  tanggal_ulas   DateTime  @default(now())
+  review_id    Int      @id @default(autoincrement())
+  user         User     @relation(fields: [user_id], references: [user_id])
+  user_id      Int
+  menu         Menu     @relation(fields: [menu_id], references: [menu_id])
+  menu_id      Int
+  rating       Int
+  komentar     String
+  tanggal_ulas DateTime @default(now())
 }
 
 model Discounts {
@@ -103,8 +100,8 @@ model Discounts {
 }
 
 model Toko {
-  toko_id       Int      @id @default(autoincrement())
-  nama_toko     String   @unique
-  alamat        String
-  menu          Menu[]   // Relasi satu ke banyak dengan Menu
+  toko_id   Int    @id @default(autoincrement())
+  nama_toko String @unique
+  alamat    String
+  menu      Menu[] // Relasi satu ke banyak dengan Menu
 }

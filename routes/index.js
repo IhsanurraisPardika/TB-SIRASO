@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const prisma = require('@prisma/client');
 const { PrismaClient } = prisma;
 
+
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 
@@ -128,7 +129,7 @@ router.get('/', (req, res) => {
 
 // Rute untuk halaman pesanan
 router.get('/pesanan', async (req, res) => {  
-  res.render('pesanan', { Menu: Menu, jumlah: jumlah }); // Kirim data ke halaman pesanan
+  res.render('pesanan') // Kirim data ke halaman pesanan
 });
 
 router.get('/menu', async (req, res) => {
@@ -268,5 +269,45 @@ router.get('/pesanan', (req, res) => {
 router.post('/pesanan', async (req, res) => {
   res.render('pesanan', { user: req.session.user }); // Render halaman pesanan dengan data user
 });
+
+// Tambahkan route ini jika belum ada
+router.get('/home', async (req, res) => {
+  try {
+    const tokos = await prisma.toko.findMany();
+    const { toko_id } = req.query;
+    
+    let currentToko = null;
+    let menus = [];
+
+    if (toko_id) {
+      currentToko = await prisma.toko.findUnique({
+        where: { toko_id: parseInt(toko_id) }
+      });
+      
+      if (currentToko) {
+        menus = await prisma.menu.findMany({
+          where: {
+            toko_id: parseInt(toko_id),
+            available: true
+          }
+        });
+      }
+    }
+
+    res.render('home', {
+      tokos, // Pastikan ini dikirim
+      currentToko,
+      menus
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).render('error', {
+      error,
+      tokos: await prisma.toko.findMany() // Tetap kirim tokos saat error
+    });
+  }
+});
+
+
 
 module.exports = router;

@@ -3,34 +3,24 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
-const {PrismaClient} = require('@prisma/client'); // Mengimpor Prisma Client
-const orderRoutes = require('./routes/orderRoutes');
-const transaksiRoutes = require('./routes/transaksiRoutes');
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
+require('dotenv').config();
 
 const app = express();
-const port = 3000; // Port yang akan digunakan oleh server
+const port = 3000;
+const prisma = new PrismaClient();
 
-// Mengimpor routing
-const indexRouter = require('./routes/index'); 
-const usersRouter = require('./routes/users'); 
-require('dotenv').config(); // Menggunakan dotenv untuk mengelola variabel lingkungan
+// Import rute yang diperlukan
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const orderRoutes = require('./routes/orderRoutes');
+const transaksiRoutes = require('./routes/transaksiRoutes');
+const menuRoutes = require('./routes/menuRoutes'); 
+const apiMenuRoutes = require('./routes/menuRoutes');
 
 
-app.post("/addUsers", async (req, res) => {
-  const user = req.body; // Mengambil data user dari request body
-  const result = await prisma.user.create({
-    data: user // Menyimpan data user ke database
-  })
-  res.send(result)
-});  
-
-app.use(session({
-  secret: process.env.SESSION_SECRET, // Mengambil secret dari .env
-  resave: false,
-  saveUninitialized: true,
-}));
-
-// View engine setup
+// Konfigurasi view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
@@ -43,42 +33,45 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Middleware session
 app.use(session({
-  secret: 'ihsan',  // Ganti dengan kunci yang lebih aman
+  secret: process.env.SESSION_SECRET || 'rahasia',
   resave: false,
   saveUninitialized: true,
+  cookie: { secure: false }
 }));
 
+// Membuat Prisma client tersedia untuk semua rute
+app.use((req, res, next) => {
+  req.prisma = prisma;
+  next();
+});
 
-// Routing untuk halaman utama dan login
-app.use('/', indexRouter);  // Menggunakan rute untuk halaman utama
-app.use('/users', usersRouter); // Menggunakan rute untuk login dan registrasi
-app.use('/', orderRoutes);
-app.use('/', transaksiRoutes);
+// Rute-rute aplikasi
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/order', orderRoutes);
+app.use('/transaksi', transaksiRoutes);
+app.use('/menu', menuRoutes);
 
-// Login route
+
+
+// Rute login
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Mencari pengguna berdasarkan email
-    const user = await prisma.user({ email });
+    const user = await prisma.user.findUnique({ where: { email } });
 
-    // Jika user tidak ditemukan
     if (!user) {
       return res.status(400).json({ error: 'User tidak ditemukan' });
     }
 
-    // Memverifikasi password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
     if (!isPasswordValid) {
       return res.status(400).json({ error: 'Password salah' });
     }
 
-    // Mengatur session setelah login berhasil
-    req.session.user = user; // Menyimpan user ke session
-
-    // Redirect ke halaman home setelah login berhasil
+    req.session.userId = user.user_id;
+    req.session.user = user;
     res.redirect('/home');
   } catch (error) {
     console.error(error);
@@ -86,52 +79,78 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Home route
-app.get('/home', (req, res) => {
-  // Cek apakah user sudah login
+// Rute home yang sudah diperbaiki
+app.get('/home', async (req, res) => {
   if (!req.session.userId) {
-    return res.redirect('/users/login'); // Jika belum login, alihkan ke halaman login
+    return res.redirect('/users/login');
   }
 
-  // Menampilkan halaman home jika user sudah login
-  res.render('home', { userId: req.session.userId });
-});
+  try {
+    // Ambil semua data cafe
+    const tokos = await prisma.toko.findMany();
+    const { toko_id } = req.query;
 
-// Halaman login
-app.get('/users/login', (req, res) => {
-  res.render('login');
-});
+    let currentToko = null;
+    let menus = [];
 
-// Halaman register
-app.get('/users/register', (req, res) => {
-  res.render('register');
-});
+    if (toko_id) {
+      // Ambil data cafe yang dipilih
+      currentToko = await prisma.toko.findUnique({
+        where: { toko_id: parseInt(toko_id) }
+      });
 
-// Halaman pesanan
-app.get('/users/pesanan', (req, res) => {
-  // Cek apakah user sudah login
-  if (!req.session.userId) {
-    return res.redirect('/users/login'); // Jika belum login, alihkan ke halaman login
+      // Jika cafe ditemukan, ambil menunya
+      if (currentToko) {
+        menus = await prisma.menu.findMany({
+          where: { 
+            toko_id: parseInt(toko_id),
+            available: true
+          },
+          orderBy: { menu_id: 'asc' }
+        });
+      }
+    }
+
+    res.render('home', {
+      userId: req.session.userId,
+      user: req.session.user,
+      tokos: tokos,
+      currentToko: currentToko,
+      menus: menus,
+      formatPrice: (price) => {
+        return new Intl.NumberFormat('id-ID', { 
+          style: 'currency', 
+          currency: 'IDR',
+          minimumFractionDigits: 0
+        }).format(price);
+      }
+    });
+
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).render('error', { 
+      error: 'Terjadi kesalahan saat memuat data',
+      message: error.message 
+    });
   }
-
-  // Menampilkan halaman pesanan jika user sudah login
-  res.render('pesanan', { userId: req.session.userId });
 });
 
-
-// Error handling
+// Penanganan error
 app.use(function(req, res, next) {
-  const err = new Error('Not Found');
+  const err = new Error('Halaman Tidak Ditemukan');
   err.status = 404;
   next(err);
 });
 
+app.use(function(err, req, res, next) {
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
+  res.status(err.status || 500);
+  res.render('error');
+});
 
-
-
-
-// Menjalankan server di localhost:3000
+// Jalankan server
 app.listen(port, () => {
   console.log(`Server berjalan di http://localhost:${port}`);
 });
