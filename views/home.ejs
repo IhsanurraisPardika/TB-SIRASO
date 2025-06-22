@@ -155,12 +155,17 @@
         loadingIndicator.classList.remove('hidden');
         emptyState.classList.add('hidden');
         
-        fetch(`/api/menus?cafe_id=${cafe.id}&category=${currentCategory}`)
-          .then(response => response.json())
+        fetch(`/api/menus?toko_id=${cafe.id}&category=${currentCategory}`)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
           .then(data => {
             loadingIndicator.classList.add('hidden');
             
-            if (data.length > 0) {
+            if (data && data.length > 0) {
               data.forEach(menu => {
                 const menuItem = document.createElement('div');
                 menuItem.className = 'bg-white rounded-lg shadow-md overflow-hidden menu-item hover:shadow-lg';
@@ -178,15 +183,15 @@
                     <p class="text-green-600 font-bold">Rp ${parseInt(menu.harga).toLocaleString('id-ID')}</p>
                     <p class="text-gray-500 text-sm mt-1 truncate">${menu.deskripsi || 'Tidak ada deskripsi'}</p>
                     <div class="flex justify-between mt-4">
-                      <button class="detail-btn px-3 py-1 bg-gray-200 rounded text-sm hover:bg-gray-300"
-                              data-id="${menu.menu_id}">
+                      <a href="/order/detail/${menu.menu_id}" class="detail-btn px-3 py-1 bg-gray-200 rounded text-sm hover:bg-gray-300">
                         Detail
-                      </button>
+                      </a>
                       <button class="order-btn px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 
                                     ${menu.stok < 1 ? 'opacity-50 cursor-not-allowed' : ''}"
                               data-id="${menu.menu_id}" 
+                              data-name="${menu.nama_makanan}"
                               ${menu.stok < 1 ? 'disabled' : ''}>
-                        Pesan
+                        + Keranjang
                       </button>
                     </div>
                   </div>
@@ -199,11 +204,12 @@
             }
           })
           .catch(error => {
-            console.error('Error:', error);
+            console.error('Error fetching menu:', error);
             loadingIndicator.classList.add('hidden');
             menuGrid.innerHTML = `
               <div class="col-span-full text-center py-10">
-                <p class="text-red-500">Terjadi kesalahan saat memuat menu. Silakan coba lagi.</p>
+                <p class="text-red-500">Terjadi kesalahan saat memuat menu. Silakan periksa koneksi atau coba lagi.</p>
+                <p class="text-xs text-gray-400 mt-2">Error: ${error.message}</p>
               </div>
             `;
           });
@@ -213,31 +219,18 @@
       document.addEventListener('click', function(e) {
         if (e.target.classList.contains('order-btn')) {
           const menuId = e.target.dataset.id;
-          const menuItem = e.target.closest('.menu-item');
-          const menuName = menuItem.querySelector('h3').textContent;
-          const menuPrice = menuItem.querySelector('p.text-green-600').textContent;
+          const menuName = e.target.dataset.name;
           
-          document.getElementById('modalMenuTitle').textContent = `Pesan ${menuName}`;
-          document.getElementById('menuId').value = menuId;
-          document.getElementById('quantity').value = 1;
-          document.getElementById('notes').value = '';
-          document.getElementById('orderModal').classList.remove('hidden');
+          // Add to cart directly
+          addToCart(menuId, 1, menuName);
         }
       });
 
-      // Modal handlers
-      document.getElementById('cancelOrder').addEventListener('click', function() {
-        document.getElementById('orderModal').classList.add('hidden');
-      });
+      // Modal handlers (can be removed if not used for ordering)
+      // ...
 
-      document.getElementById('orderForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const menuId = document.getElementById('menuId').value;
-        const quantity = document.getElementById('quantity').value;
-        const notes = document.getElementById('notes').value;
-        
-        // Kirim data ke server
-        fetch('/api/keranjang', {
+      function addToCart(menuId, quantity, menuName) {
+        fetch('/keranjang/add', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -245,14 +238,13 @@
           body: JSON.stringify({
             menu_id: menuId,
             jumlah: quantity,
-            catatan: notes
           }),
         })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            alert('Menu berhasil ditambahkan ke keranjang!');
-            document.getElementById('orderModal').classList.add('hidden');
+            alert(`'${menuName}' berhasil ditambahkan ke keranjang!`);
+            // Optionally, update a cart icon/counter here
           } else {
             alert('Gagal menambahkan ke keranjang: ' + (data.message || 'Terjadi kesalahan'));
           }
@@ -261,7 +253,7 @@
           console.error('Error:', error);
           alert('Terjadi kesalahan saat memproses permintaan');
         });
-      });
+      }
     });
   </script>
 </body>

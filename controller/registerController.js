@@ -1,7 +1,5 @@
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
 
 // Fungsi untuk register user
 const registerUser = async (req, res) => {
@@ -23,7 +21,7 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Simpan ke database
-    const user = await prisma.user.create({
+    const user = await req.prisma.user.create({
       data: {
         fullname,
         username,

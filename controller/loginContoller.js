@@ -1,7 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
-const prisma = new PrismaClient();
 
 // Fungsi untuk login
 const loginUser = async (req, res) => {
@@ -15,7 +13,7 @@ const loginUser = async (req, res) => {
 
   try {
     // Mencari user berdasarkan username
-    const user = await prisma.user.findUnique({
+    const user = await req.prisma.user.findUnique({
       where: { username: username },
     });
 

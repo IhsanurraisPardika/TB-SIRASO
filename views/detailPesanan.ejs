@@ -3,91 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Detail Pesanan</title>
-
-  <!-- Tailwind CSS CDN (atau ganti ke build lokal) -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100">
+  <%- include('partials/header') %>
 
-  <!-- ====== Header ====== -->
-  <header class="bg-green-700 text-white py-4 px-6 flex justify-between items-center">
-    <h1 class="text-xl font-bold">Detail Pesanan</h1>
-    <nav>
-      <a href="/"        class="ml-4 hover:underline">Home</a>
-      <a href="/pesanan" class="ml-4 hover:underline">Pesanan Saya</a>
-    </nav>
-  </header>
+  <main class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto flex flex-col md:flex-row gap-8">
+      <!-- Product Card -->
+      <div class="md:w-1/2 bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center">
+        <div class="w-full h-64 rounded-xl overflow-hidden mb-4">
+          <img src="<%= menu.gambar_url || '/images/default-food.jpg' %>" alt="<%= menu.nama_makanan %>" class="w-full h-full object-cover">
+        </div>
+        <h2 class="text-3xl font-bold text-gray-800"><%= menu.nama_makanan %></h2>
+        <p class="text-2xl font-semibold text-green-600 mt-2"><%= formatPrice(menu.harga) %></p>
+        <p class="text-gray-600 mt-4 text-center"><%= menu.deskripsi || 'Tidak ada deskripsi.' %></p>
+      </div>
 
-  <!-- ====== Card ====== -->
-  <main class="max-w-4xl mx-auto mt-10 bg-white p-8 rounded shadow">
+      <!-- Order Form -->
+      <div class="md:w-1/2 bg-green-700 text-white rounded-2xl shadow-lg p-8">
+        <h1 class="text-3xl font-bold mb-6">Rincian Pesanan</h1>
+        <form id="order-form" class="space-y-6">
+          <input type="hidden" name="menu_id" value="<%= menu.menu_id %>">
+          <div>
+            <label class="block text-lg font-medium mb-2">Nama Menu:</label>
+            <p class="text-xl font-semibold"><%= menu.nama_makanan %></p>
+          </div>
 
-    <!-- ---------- Informasi Transaksi ---------- -->
-    <section class="mb-6">
-      <h2 class="text-lg font-semibold text-green-700 mb-2">Informasi Transaksi</h2>
-      <ul class="text-sm leading-relaxed">
-        <li><strong>No. Transaksi:</strong> TRX<%= transaksi.transaction_id.toString().padStart(3, '0') %></li>
-        <li><strong>Nama:</strong> <%= transaksi.user.fullname %></li>
-        <li><strong>Tanggal:</strong> <%= transaksi.tanggal_transaksi.toLocaleString('id-ID') %></li>
-        <li><strong>Status:</strong> <span class="text-green-600 font-medium">Pembayaran berhasil</span></li>
-        <li><strong>Metode Pembayaran:</strong> <%= transaksi.metode_pembayaran %></li>
-      </ul>
-    </section>
+          <div>
+            <label for="jumlah" class="block text-lg font-medium mb-2">Jumlah:</label>
+            <div class="flex items-center">
+              <button type="button" id="decrease-qty" class="w-10 h-10 bg-white text-green-700 rounded-full text-lg font-bold">-</button>
+              <input type="number" id="jumlah" name="jumlah" value="1" min="1" max="<%= menu.stok %>" class="w-20 text-center bg-transparent text-2xl font-bold mx-4 border-b-2 border-white focus:outline-none">
+              <button type="button" id="increase-qty" class="w-10 h-10 bg-white text-green-700 rounded-full text-lg font-bold">+</button>
+            </div>
+          </div>
 
-    <!-- ---------- Detail Pesanan ---------- -->
-    <section>
-      <h2 class="text-lg font-semibold text-green-700 mb-2">Detail Pesanan</h2>
+          <div>
+            <label for="pembayaran" class="block text-lg font-medium mb-2">Pembayaran:</label>
+            <select id="pembayaran" name="pembayaran" class="w-full p-3 rounded-lg bg-white text-gray-800 focus:outline-none">
+              <option>BNI</option>
+              <option>Gopay</option>
+              <option>DANA</option>
+              <option>Cash</option>
+            </select>
+          </div>
 
-      <table class="w-full border text-sm">
-        <thead class="bg-green-700 text-white">
-          <tr>
-            <th class="p-2 text-left">Nama Menu</th>
-            <th class="p-2 text-center">Jumlah</th>
-            <th class="p-2 text-right">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% items.forEach(item => { %>
-            <tr class="border-b">
-              <td class="p-2"><%= item.menu.nama_makanan %></td>
-              <td class="p-2 text-center"><%= item.jumlah %></td>
-              <td class="p-2 text-right">
-                Rp <%= (parseFloat(item.menu.harga) * item.jumlah).toLocaleString('id-ID') %>
-              </td>
-            </tr>
-          <% }) %>
-
-          <!-- Baris Biaya Layanan -->
-          <tr class="border-t bg-gray-50">
-            <td class="p-2 font-medium">Biaya Layanan</td>
-            <td class="p-2 text-center"></td>
-            <td class="p-2 text-right">
-              Rp <%= biayaLayanan.toLocaleString('id-ID') %>
-            </td>
-          </tr>
-
-          <!-- Baris Total Bayar -->
-          <tr class="border-t bg-green-50">
-            <td class="p-2 font-bold text-green-700">Total Bayar</td>
-            <td class="p-2 text-center font-bold text-green-700"></td>
-            <td class="p-2 text-right font-bold text-green-700">
-              Rp <%= totalBayar.toLocaleString('id-ID') %>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ---------- Tombol Aksi ---------- -->
-    <div class="flex justify-end gap-4 mt-8">
-       <a href="/home" class="bg-gray-500 text-white px-5 py-2 rounded hover:bg-gray-600">Kembali</a>
-      <a href="/pesanan/<%= transaksi.transaction_id %>/cetak"
-         class="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700">
-        Cetak Bukti
-      </a>
+          <div class="pt-4 flex flex-col sm:flex-row gap-4">
+            <button type="button" id="add-to-cart-btn" class="flex-1 w-full flex items-center justify-center gap-2 py-3 px-4 bg-white text-green-700 font-bold rounded-lg hover:bg-gray-200 transition">
+              <i class="fas fa-shopping-cart"></i>
+              Tambah Keranjang
+            </button>
+            <button type="submit" id="order-now-btn" class="flex-1 w-full flex items-center justify-center gap-2 py-3 px-4 bg-yellow-400 text-gray-900 font-bold rounded-lg hover:bg-yellow-500 transition">
+              <i class="fas fa-bolt"></i>
+              Pesan Sekarang
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-
   </main>
 
+  <%- include('partials/footer') %>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const decreaseBtn = document.getElementById('decrease-qty');
+      const increaseBtn = document.getElementById('increase-qty');
+      const qtyInput = document.getElementById('jumlah');
+      const addToCartBtn = document.getElementById('add-to-cart-btn');
+
+      decreaseBtn.addEventListener('click', () => {
+        let currentQty = parseInt(qtyInput.value);
+        if (currentQty > 1) {
+          qtyInput.value = currentQty - 1;
+        }
+      });
+
+      increaseBtn.addEventListener('click', () => {
+        let currentQty = parseInt(qtyInput.value);
+        const maxQty = parseInt(qtyInput.max);
+        if (currentQty < maxQty) {
+          qtyInput.value = currentQty + 1;
+        } else {
+          alert('Stok tidak mencukupi.');
+        }
+      });
+
+      addToCartBtn.addEventListener('click', () => {
+        const menuId = document.querySelector('input[name="menu_id"]').value;
+        const quantity = qtyInput.value;
+
+        fetch('/keranjang/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ menu_id: menuId, jumlah: quantity })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if(data.success) {
+            alert(data.message);
+            window.location.href = '/keranjang';
+          } else {
+            alert('Gagal: ' + data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Terjadi kesalahan.');
+        });
+      });
+      
+      // Handle "Pesan Sekarang"
+      document.getElementById('order-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('Fungsionalitas "Pesan Sekarang" akan mengarahkan ke halaman ringkasan/checkout.');
+        // Here you would typically redirect to a checkout page with the order details
+        // For example: window.location.href = '/checkout/now?menu_id=...&jumlah=...';
+      });
+    });
+  </script>
 </body>
 </html>

@@ -1,97 +1,162 @@
-<% layout('layouts/layout') -%>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keranjang Belanja - SIRASO BC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
 
-<h1 class="text-3xl font-bold mb-6">Keranjang Belanja</h1>
+<%- include('partials/header') %>
 
-<% if (items.length === 0) { %>
-  <div class="bg-white rounded-lg shadow p-6 text-center">
-    <p class="text-gray-600 mb-4">Keranjang belanja Anda kosong.</p>
-    <a href="/" class="inline-block px-4 py-2 bg-blue-600 text-white rounded">Kembali ke Menu</a>
-  </div>
-<% } else { %>
-  <div class="bg-white rounded-lg shadow p-6">
-    <% items.forEach(item => { %>
-      <div class="flex justify-between items-center border-b pb-4 mb-4">
-        <div class="flex-1">
-          <h3 class="font-semibold"><%= item.menu.nama_makanan %></h3>
-          <p class="text-gray-600">Harga: Rp<%= parseFloat(item.menu.harga).toLocaleString('id-ID') %></p>
-          <p class="text-gray-600">Subtotal: Rp<%= (parseFloat(item.menu.harga) * item.jumlah).toLocaleString('id-ID') %></p>
-          <p class="text-gray-600">Waktu Pengambilan: <%= item.waktu_pengambilan.toLocaleString('id-ID') %></p>
-        </div>
-        <div class="flex items-center">
-          <button class="decrease-btn px-2 py-1 bg-gray-200 rounded" data-id="<%= item.keranjang_id %>">-</button>
-          <span class="mx-2 w-8 text-center"><%= item.jumlah %></span>
-          <button class="increase-btn px-2 py-1 bg-gray-200 rounded" data-id="<%= item.keranjang_id %>">+</button>
-        </div>
-        <button class="remove-btn ml-4 px-3 py-1 bg-red-500 text-white rounded" data-id="<%= item.keranjang_id %>">Hapus</button>
-      </div>
-    <% }); %>
-    
-    <div class="mt-6 pt-4 border-t">
-      <p class="text-xl font-semibold text-right">
-        Total: Rp<%= items.reduce((sum, item) => sum + (parseFloat(item.menu.harga) * item.jumlah), 0).toLocaleString('id-ID') %>
-      </p>
-    </div>
-    
-    <div class="mt-6 flex justify-between">
-      <div>
-        <a href="/" class="px-4 py-2 bg-gray-200 rounded">Kembali ke Menu</a>
-        <button class="px-4 py-2 bg-red-500 text-white rounded ml-2" id="clearCart">Hapus Semua</button>
-      </div>
-      <button class="px-4 py-2 bg-green-600 text-white rounded" id="checkout">Checkout</button>
-    </div>
-  </div>
-<% } %>
+<body class="bg-gray-50 font-sans text-gray-900">
+    <main class="container mx-auto px-4 py-6">
+        <h1 class="text-3xl font-bold mb-6 text-green-800">Keranjang Belanja</h1>
 
-<!-- Modal Checkout -->
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden" id="checkoutModal">
-  <div class="bg-white rounded-lg p-6 w-full max-w-md">
-    <h3 class="text-xl font-semibold mb-4">Checkout</h3>
-    <form id="checkoutForm">
-      <div class="mb-4">
-        <label class="block text-gray-700 mb-2">Metode Pembayaran:</label>
-        <select class="w-full px-3 py-2 border rounded" name="metode_pembayaran" required>
-          <option value="BNI">BNI</option>
-          <option value="Gopay">Gopay</option>
-          <option value="Dana">Dana</option>
-          <option value="Cash">Cash</option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 mb-2">Kode Diskon (opsional):</label>
-        <input type="text" class="w-full px-3 py-2 border rounded" name="kode_diskon">
-      </div>
-      <div class="flex justify-end space-x-2">
-        <button type="button" class="px-4 py-2 bg-gray-200 rounded" id="cancelCheckout">Batal</button>
-        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Konfirmasi</button>
-      </div>
-    </form>
-  </div>
-</div>
+        <% if (items && items.length > 0) { %>
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Cart Items -->
+                <div class="lg:w-2/3">
+                    <div class="bg-white rounded-lg shadow-md p-6 space-y-4">
+                        <% items.forEach(item => { %>
+                            <div class="flex items-center border-b pb-4" data-id="<%= item.keranjang_id %>">
+                                <img src="<%= item.menu.gambar_url || '/images/default-food.jpg' %>" alt="<%= item.menu.nama_makanan %>" class="w-24 h-24 object-cover rounded-md mr-4">
+                                <div class="flex-grow">
+                                    <h2 class="font-bold text-lg"><%= item.menu.nama_makanan %></h2>
+                                    <p class="text-green-600 font-semibold"><%= formatPrice(item.menu.harga) %></p>
+                                    <button class="text-red-500 text-sm hover:underline remove-item-btn mt-1">Hapus</button>
+                                </div>
+                                <div class="flex items-center">
+                                    <button class="w-8 h-8 bg-gray-200 rounded-full decrease-btn">-</button>
+                                    <span class="mx-4 font-semibold quantity-span"><%= item.jumlah %></span>
+                                    <button class="w-8 h-8 bg-gray-200 rounded-full increase-btn">+</button>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
 
-<script>
-  // Implementasi JavaScript untuk keranjang
-  document.querySelectorAll('.decrease-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.dataset.id;
-      const quantitySpan = btn.nextElementSibling;
-      const newQuantity = parseInt(quantitySpan.textContent) - 1;
-      
-      if (newQuantity < 1) {
-        // Hapus item jika quantity 0
-        await fetch(`/keranjang/${id}`, { method: 'DELETE' });
-        location.reload();
-      } else {
-        // Update quantity
-        await fetch(`/keranjang/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jumlah: newQuantity })
+                <!-- Order Summary -->
+                <div class="lg:w-1/3">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-bold border-b pb-4 mb-4">Ringkasan Pesanan</h2>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>Subtotal</span>
+                                <span><%= formatPrice(items.reduce((sum, item) => sum + (item.menu.harga * item.jumlah), 0)) %></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Biaya Layanan</span>
+                                <span><%= formatPrice(2000) %></span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between font-bold text-xl mt-4 pt-4 border-t">
+                            <span>Total</span>
+                            <span id="total-price"><%= formatPrice(items.reduce((sum, item) => sum + (item.menu.harga * item.jumlah), 0) + 2000) %></span>
+                        </div>
+                        <button class="w-full mt-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">
+                            Lanjut ke Checkout
+                        </button>
+                    </div>
+                     <div class="mt-6 flex justify-between items-center">
+                        <a href="/home" class="text-green-600 hover:underline">&larr; Kembali ke Menu</a>
+                        <button id="clear-cart-btn" class="text-sm text-gray-500 hover:text-red-600">Kosongkan Keranjang</button>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="text-center bg-white p-10 rounded-lg shadow-md">
+                <h2 class="text-2xl mb-4">Keranjang Anda kosong</h2>
+                <p class="text-gray-600 mb-6">Sepertinya Anda belum menambahkan apapun ke keranjang.</p>
+                <a href="/home" class="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">Mulai Belanja</a>
+            </div>
+        <% } %>
+    </main>
+    <%- include('partials/footer') %>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.increase-btn, .decrease-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const cartItem = e.target.closest('[data-id]');
+                    const keranjang_id = cartItem.dataset.id;
+                    const quantitySpan = cartItem.querySelector('.quantity-span');
+                    let currentQuantity = parseInt(quantitySpan.textContent);
+                    
+                    if (e.target.classList.contains('increase-btn')) {
+                        currentQuantity++;
+                    } else {
+                        currentQuantity--;
+                    }
+
+                    updateQuantity(keranjang_id, currentQuantity);
+                });
+            });
+
+            document.querySelectorAll('.remove-item-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const cartItem = e.target.closest('[data-id]');
+                    const keranjang_id = cartItem.dataset.id;
+                    
+                    if(confirm('Anda yakin ingin menghapus item ini?')) {
+                        deleteItem(keranjang_id);
+                    }
+                });
+            });
+
+            const clearCartBtn = document.getElementById('clear-cart-btn');
+            if(clearCartBtn) {
+                clearCartBtn.addEventListener('click', () => {
+                    if(confirm('Anda yakin ingin mengosongkan keranjang?')) {
+                        fetch('/keranjang/clear', { method: 'DELETE' })
+                            .then(res => res.json())
+                            .then(data => {
+                                if(data.success) {
+                                    location.reload();
+                                } else {
+                                    alert('Gagal mengosongkan keranjang.');
+                                }
+                            });
+                    }
+                });
+            }
+
+            function updateQuantity(id, jumlah) {
+                if (jumlah < 1) {
+                    deleteItem(id);
+                    return;
+                }
+                
+                fetch(`/keranjang/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jumlah: jumlah })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        location.reload();
+                    } else {
+                        alert('Gagal memperbarui jumlah.');
+                    }
+                });
+            }
+
+            function deleteItem(id) {
+                fetch(`/keranjang/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        document.querySelector(`[data-id="${id}"]`).remove();
+                        location.reload();
+                    } else {
+                        alert('Gagal menghapus item.');
+                    }
+                });
+            }
         });
-        quantitySpan.textContent = newQuantity;
-        location.reload();
-      }
-    });
-  });
-  
-  // ... (implementasi lainnya)
-</script>
+    </script>
+</body>
+</html>

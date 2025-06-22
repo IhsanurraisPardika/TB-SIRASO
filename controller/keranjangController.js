@@ -1,19 +1,30 @@
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
 
 exports.getKeranjangByUser = async (req, res) => {
-  const userId = req.session.userId || 1; // Untuk demo, ganti dengan auth sesungguhnya
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+  const userId = req.session.user.user_id;
   try {
-    const keranjang = await prisma.keranjang.findMany({
+    const keranjang = await req.prisma.keranjang.findMany({
       where: { user_id: userId },
       include: {
         menu: true
       }
     });
     
+    const formatPrice = (price) => {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+      }).format(price);
+    };
+
     res.render('keranjang', {
       title: 'Keranjang Belanja',
-      items: keranjang
+      items: keranjang,
+      formatPrice: formatPrice
     });
   } catch (error) {
     console.error(error);
@@ -22,21 +33,24 @@ exports.getKeranjangByUser = async (req, res) => {
 };
 
 exports.addToKeranjang = async (req, res) => {
-  const userId = req.session.userId || 1;
-  const { menu_id, jumlah, waktu_pengambilan } = req.body;
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Silakan login terlebih dahulu' });
+  }
+  const userId = req.session.user.user_id;
+  const { menu_id, jumlah } = req.body;
   
   try {
     // Cek stok menu
-    const menu = await prisma.menu.findUnique({
+    const menu = await req.prisma.menu.findUnique({
       where: { menu_id: parseInt(menu_id) }
     });
     
     if (!menu || menu.stok < jumlah) {
-      return res.status(400).json({ error: 'Stok tidak mencukupi' });
+      return res.status(400).json({ success: false, message: 'Stok tidak mencukupi' });
     }
     
     // Cek apakah menu sudah ada di keranjang
-    const existingItem = await prisma.keranjang.findFirst({
+    const existingItem = await req.prisma.keranjang.findFirst({
       where: {
         user_id: userId,
         menu_id: parseInt(menu_id)
@@ -45,29 +59,28 @@ exports.addToKeranjang = async (req, res) => {
     
     if (existingItem) {
       // Update jumlah jika sudah ada
-      await prisma.keranjang.update({
+      await req.prisma.keranjang.update({
         where: { keranjang_id: existingItem.keranjang_id },
         data: { 
           jumlah: existingItem.jumlah + parseInt(jumlah),
-          waktu_pengambilan: new Date(waktu_pengambilan)
         }
       });
     } else {
       // Tambahkan baru ke keranjang
-      await prisma.keranjang.create({
+      await req.prisma.keranjang.create({
         data: {
           user_id: userId,
           menu_id: parseInt(menu_id),
           jumlah: parseInt(jumlah),
-          waktu_pengambilan: new Date(waktu_pengambilan)
+          waktu_pengambilan: new Date() // Placeholder, user will set this later
         }
       });
     }
     
-    res.json({ success: true });
+    res.json({ success: true, message: 'Menu berhasil ditambahkan ke keranjang!' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
 
@@ -77,11 +90,11 @@ exports.updateKeranjangItem = async (req, res) => {
   
   try {
     if (parseInt(jumlah) <= 0) {
-      await prisma.keranjang.delete({
+      await req.prisma.keranjang.delete({
         where: { keranjang_id: parseInt(keranjang_id) }
       });
     } else {
-      await prisma.keranjang.update({
+      await req.prisma.keranjang.update({
         where: { keranjang_id: parseInt(keranjang_id) },
         data: { jumlah: parseInt(jumlah) }
       });
@@ -92,4 +105,33 @@ exports.updateKeranjangItem = async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+};
+
+exports.deleteKeranjangItem = async (req, res) => {
+    const { keranjang_id } = req.params;
+    try {
+        await req.prisma.keranjang.delete({
+            where: { keranjang_id: parseInt(keranjang_id) }
+        });
+        res.json({ success: true, message: 'Item berhasil dihapus' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Gagal menghapus item' });
+    }
+};
+
+exports.clearKeranjang = async (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ success: false, message: 'Silakan login terlebih dahulu' });
+    }
+    const userId = req.session.user.user_id;
+    try {
+        await req.prisma.keranjang.deleteMany({
+            where: { user_id: userId }
+        });
+        res.json({ success: true, message: 'Keranjang berhasil dikosongkan' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Gagal mengosongkan keranjang' });
+    }
 };
