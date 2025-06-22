@@ -36,7 +36,11 @@ router.get('/pesanan', async (req, res) => {
       }
     }
 
-    res.render('penjual/pesananP', { transaksi: hasilTransaksi });
+    res.render('penjual/pesananP', {
+  transaksi: hasilTransaksi,
+  activePage: 'pesanan'
+});
+
 
   } catch (error) {
     console.error(error);
@@ -51,5 +55,16 @@ router.post('/tambahmenu', penjualController.tambahMenu);
 router.post('/hapusmenu/:id', penjualController.hapusMenu);
 router.get('/editmenu/:id', penjualController.renderEditMenu);
 router.post('/editmenu/:id', penjualController.updateMenu);
+
+// router.get('/kelolamenu', async (req, res) => {
+//   try {
+//     const menu = await prisma.menu.findMany();
+//     res.render('penjual/kelolamenu', { menu, activePage: 'kelolamenu' });
+//   } catch (error) {
+//     console.error("Gagal mengambil data menu:", error);
+//     res.status(500).send("Internal Server Error");
+//   }
+// });
+
 
 module.exports = router;

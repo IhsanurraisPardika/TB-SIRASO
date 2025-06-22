@@ -61,6 +61,7 @@ model Transactions {
   bukti_pembayaran   String?
   riwayat_pengembalian String?
   pickup_schedule    PickupSchedule?
+    status              String   @default("Menunggu")
 }
 
 model PickupSchedule {

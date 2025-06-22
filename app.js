@@ -38,7 +38,7 @@ app.use('/users', usersRouter);
 
 // Routing penjual (Kelola Menu, Pesanan, dll)
 app.use('/penjual', penjualRouter);     // rute seperti /penjual/kelolamenu
-app.use('/penjual', pesananPRouter);    // rute seperti /penjual/pesanan
+app.use('/penjual/pesanan', pesananPRouter);    // rute seperti /penjual/pesanan
 
 // Login route (dummy)
 app.post('/login', async (req, res) => {

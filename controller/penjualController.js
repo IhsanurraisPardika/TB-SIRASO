@@ -7,10 +7,11 @@ const renderTambahMenu = (req, res) => {
 };
 
 // Tampilkan halaman kelola menu
+// Tampilkan halaman kelola menu
 const renderKelolaMenu = async (req, res) => {
   try {
     const menu = await prisma.menu.findMany();
-    res.render('penjual/kelolamenu', { menu });
+    res.render('penjual/kelolamenu', { menu, activePage: 'kelolamenu' });
   } catch (error) {
     console.error(error);
     res.status(500).send('Gagal mengambil data menu.');
