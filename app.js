@@ -3,19 +3,22 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
-const { PrismaClient } = require('@prisma/client'); // Mengimpor Prisma Client
+
+
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
+require('dotenv').config();
+const {PrismaClient} = require('@prisma/client'); // Mengimpor Prisma Client
 const orderRoutes = require('./routes/orderRoutes');
 const transaksiRoutes = require('./routes/transaksiRoutes');
+const refundRoutes = require('./routes/refundRoutes');  // pastikan path-nya sesuai
+const historyRoutes = require('./routes/historyRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+
 
 const app = express();
-const port = 3000; // Port yang akan digunakan oleh server
-
-// Mengimpor routing
-const indexRouter = require('./routes/index'); 
-const usersRouter = require('./routes/users'); 
-require('dotenv').config(); // Menggunakan dotenv untuk mengelola variabel lingkungan
-
-const prisma = new PrismaClient(); // Inisialisasi Prisma Client (penting!)
+const port = 3000;
+const prisma = new PrismaClient();
 
 app.post("/addUsers", async (req, res) => {
   const user = req.body; // Mengambil data user dari request body
@@ -30,10 +33,23 @@ app.use(session({
   resave: false,
   saveUninitialized: true,
 }));
+=======
+// Import rute yang diperlukan
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const orderRoutes = require('./routes/orderRoutes');
+const transaksiRoutes = require('./routes/transaksiRoutes');
+const menuRoutes = require('./routes/menuRoutes');
+const keranjangRoutes = require('./routes/keranjangRoutes');
+const apiRoutes = require('./routes/apiRoutes');
 
-// View engine setup
+require('dotenv').config(); // Menggunakan dotenv untuk mengelola variabel lingkungan
+
+
+// Konfigurasi view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
 
 // Middleware
 app.use(logger('dev'));
@@ -42,56 +58,87 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routing
-app.use('/', indexRouter);            // Rute utama
-app.use('/users', usersRouter);       // Rute untuk user (login/register)
-app.use('/', orderRoutes);            // Rute untuk pesanan
-app.use('/', transaksiRoutes);        // Rute untuk transaksi
 
-const bcrypt = require('bcrypt'); // Tambahkan jika login pakai bcrypt
+// View engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
-// Login route
+const penjualRouter = require('./routes/penjual');
+const pesananPRouter = require('./routes/pesananP');
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
+
+// Routing penjual (Kelola Menu, Pesanan, dll)
+app.use('/penjual', penjualRouter);     // rute seperti /penjual/kelolamenu
+app.use('/penjual/pesanan', pesananPRouter);    // rute seperti /penjual/pesanan
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+// Middleware session
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'rahasia',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
+
+
+// Membuat Prisma client tersedia untuk semua rute
+app.use((req, res, next) => {
+  req.prisma = prisma;
+  next();
+
+
+// Routing untuk halaman utama dan login
+app.use('/', indexRouter);  // Menggunakan rute untuk halaman utama
+app.use('/users', usersRouter); // Menggunakan rute untuk login dan registrasi
+app.use('/', orderRoutes);
+app.use('/', transaksiRoutes);
+app.use('/', refundRoutes);// Menggunakan routes untuk refund
+app.use('/history', historyRoutes); // history
+app.use('/pembayaran', paymentRoutes);
+
+// Login route (dummy)
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-
   try {
-    // Mencari pengguna berdasarkan email
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email } }); // ✅ pakai findUnique
+    if (!user) return res.status(400).json({ error: 'User tidak ditemukan' });
 
-    // Jika user tidak ditemukan
-    if (!user) {
-      return res.status(400).json({ error: 'User tidak ditemukan' });
-    }
 
-    // Memverifikasi password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(400).json({ error: 'Password salah' });
-    }
-
+    if (!isPasswordValid) return res.status(400).json({ error: 'Password salah' });
     // Mengatur session setelah login berhasil
     req.session.user = user; // Menyimpan user ke session
     req.session.userId = user.id;
 
     // Redirect ke halaman home setelah login berhasil
+
+    req.session.userId = user.id; // Simpan ID saja, lebih aman
+
     res.redirect('/home');
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Login gagal, coba lagi.' });
+    res.status(500).json({ error: 'Login gagal' });
   }
 });
 
 // Home route
 app.get('/home', (req, res) => {
-  // Cek apakah user sudah login
-  if (!req.session.userId) {
-    return res.redirect('/users/login'); // Jika belum login, alihkan ke halaman login
-  }
-
-  // Menampilkan halaman home jika user sudah login
+  if (!req.session.userId) return res.redirect('/users/login');
   res.render('home', { userId: req.session.userId });
 });
+
+// Auth routes
+app.get('/users/login', (req, res) => res.render('login'));
+app.get('/users/register', (req, res) => res.render('register'));
+
+// Error handler
+app.use((req, res, next) => {
+  const err = new Error('Not Found');
 
 // Halaman login
 app.get('/users/login', (req, res) => {
@@ -112,16 +159,30 @@ app.get('/users/pesanan', (req, res) => {
 
   // Menampilkan halaman pesanan jika user sudah login
   res.render('pesanan', { userId: req.session.userId });
+
 });
 
-// Error handling
-app.use(function(req, res, next) {
-  const err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+// Rute-rute aplikasi
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/order', orderRoutes);
+app.use('/transaksi', transaksiRoutes);
+app.use('/menu', menuRoutes);
+app.use('/keranjang', keranjangRoutes);
+app.use('/api', apiRoutes);
+
+
+// Server start
+app.use(function(err, req, res, next) {
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  res.status(err.status || 500);
+  res.render('error');
 });
 
-// Menjalankan server di localhost:3000
+// Jalankan server
+
 app.listen(port, () => {
   console.log(`Server berjalan di http://localhost:${port}`);
 });

@@ -30,7 +30,7 @@
 
         <h2 class="text-2xl font-bold mb-4 text-center">Log in</h2>
 
-        <form action="/users/login" method="POST">
+        <form action="/login" method="POST">
           <!-- Email -->
           <div class="mb-4">
             <input type="text" name="email" placeholder="email" required
@@ -56,6 +56,11 @@
             class="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300">
             Log in
           </button>
+
+          <p class="mt-4 text-center text-sm text-gray-600">
+  <span class="text-gray-500">Login sebagai penjual?</span>
+  <a href="/penjual/login" class="text-green-600 hover:underline">Klik di sini</a>
+</p>
 
           <!-- Register Link -->
           <div class="mt-4 text-center text-sm">

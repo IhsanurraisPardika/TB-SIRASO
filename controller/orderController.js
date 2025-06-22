@@ -5,16 +5,18 @@ exports.getRingkasanPesanan = async (req, res) => {
   try {
     const userId = 1; // Ganti nanti dengan user login dinamis
 
-    // Ambil isi keranjang user & relasi menu
+    // Ambil isi keranjang user & menu
     const keranjang = await prisma.keranjang.findMany({
       where: { user_id: userId },
       include: { menu: true },
     });
 
-    console.log('Isi Keranjang:', keranjang); // Debug
+    if (keranjang.length === 0) {
+      return res.status(404).send('Keranjang kosong.');
+    }
 
     const pesanan = keranjang.map((item) => {
-      const harga = parseFloat(item.menu.harga); // konversi dari string
+      const harga = parseFloat(item.menu.harga);
       const subtotal = harga * item.jumlah;
 
       return {
@@ -27,15 +29,64 @@ exports.getRingkasanPesanan = async (req, res) => {
 
     const total = pesanan.reduce((sum, item) => sum + item.subtotal, 0);
 
+    // ✅ Ambil transaksi terakhir user (bisa difilter lebih spesifik jika perlu)
+    const transaksi = await prisma.transactions.findFirst({
+      where: { user_id: userId },
+      orderBy: { tanggal_transaksi: 'desc' },
+    });
+
+    if (!transaksi) {
+      return res.status(404).send('Transaksi tidak ditemukan.');
+    }
+
+    // Ambil metode pembayaran dari transaksi
+    const metodePembayaran = transaksi.metode_pembayaran;
+    const kodeDiskon = transaksi.kode_diskon || null;
+
+    // Render ke halaman EJS
     res.render('ringkasan', {
       pesanan,
       total,
-      metodePembayaran: 'Bayar di tempat',
-      kodeDiskon: null
+      metodePembayaran,
+      kodeDiskon,
     });
 
   } catch (err) {
     console.error('Gagal ambil ringkasan:', err);
     res.status(500).send('Terjadi kesalahan saat mengambil ringkasan pembayaran');
   }
+};
+
+exports.getOrderDetail = async (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    try {
+        const menu = await req.prisma.menu.findUnique({
+            where: { menu_id: parseInt(req.params.id) },
+            include: { toko: true },
+        });
+
+        if (!menu) {
+            return res.status(404).render('error', { message: 'Menu tidak ditemukan' });
+        }
+
+        const formatPrice = (price) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(price);
+        };
+
+        res.render('detailPesanan', {
+            title: `Pesan ${menu.nama_makanan}`,
+            menu,
+            user: req.session.user,
+            formatPrice
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).render('error', { error });
+    }
 };

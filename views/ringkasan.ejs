@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ringkasan Pembayaran</title>
-
-  <!-- Tailwind CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -14,19 +12,12 @@
 
 <body class="bg-gray-100 font-sans">
 
-  <!-- Header -->
-  <div class="bg-green-600 text-white py-4 px-6 flex justify-between items-center">
-    <h1 class="text-lg font-bold">Pemesanan Makanan di Bussiness Center UNAND</h1>
-    <nav>
-      <a href="/" class="ml-4 hover:underline">Home</a>
-      <a href="/about" class="ml-4 hover:underline">About</a>
-      <a href="/pesanan" class="ml-4 hover:underline">Pesanan saya</a>
-    </nav>
-  </div>
+  < <!-- Header -->
+    <%- include('partials/header') %> <!-- Menggunakan partial header.ejs -->
 
   <!-- Container -->
-  <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
-    <h2 class="text-xl font-semibold mb-4 text-center">Ringkasan Pembayaran</h2>
+  <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow-lg border border-gray-200">
+    <h2 class="text-2xl font-semibold mb-6 text-center text-green-700">Ringkasan Pembayaran</h2>
 
     <% if (pesanan.length === 0) { %>
       <p class="text-center text-red-600 text-sm">
@@ -34,49 +25,40 @@
       </p>
     <% } else { %>
 
-      <p class="mb-4 font-medium">Pesanan Anda:</p>
+      <p class="mb-4 font-medium text-lg">Pesanan Anda:</p>
 
       <table class="w-full border text-left mb-4">
-        <thead class="bg-green-600 text-white">
+        <thead class="bg-green-700 text-white">
           <tr>
-            <th class="px-2 py-1">Nama Barang</th>
-            <th class="px-2 py-1">Jumlah</th>
-            <th class="px-2 py-1">Harga</th>
+            <th class="px-4 py-2 text-center">Nama Barang</th>
+            <th class="px-4 py-2 text-center">Jumlah</th>
+            <th class="px-4 py-2 text-center">Harga</th>
           </tr>
         </thead>
         <tbody>
           <% pesanan.forEach(item => { %>
             <tr class="border-t">
-              <td class="px-2 py-1"><%= item.nama_makanan %></td>
-              <td class="px-2 py-1"><%= item.jumlah %></td>
-              <td class="px-2 py-1">Rp <%= item.subtotal.toLocaleString('id-ID') %></td>
+              <td class="px-4 py-2 text-center"><%= item.nama_makanan %></td>
+              <td class="px-4 py-2 text-center"><%= item.jumlah %></td>
+              <td class="px-4 py-2 text-center">Rp <%= item.subtotal.toLocaleString('id-ID') %></td>
             </tr>
           <% }) %>
         </tbody>
       </table>
-
-      <p class="text-sm text-gray-600">
-        <strong>Kode Diskon:</strong>
-        <% if (kodeDiskon) { %>
-          <span class="text-green-600"><%= kodeDiskon %></span>
-        <% } else { %>
-          <span class="text-green-600">Tidak ada kode diskon</span>
-        <% } %>
-      </p>
 
       <p class="text-sm text-gray-600 mt-1">
         <strong>Metode Pembayaran:</strong>
         <span class="text-green-600"><%= metodePembayaran %></span>
       </p>
 
-      <p class="mt-4 font-bold text-lg">
+      <p class="mt-4 font-bold text-lg text-green-700">
         Total Pembayaran: Rp <%= total.toLocaleString('id-ID') %>
       </p>
 
       <!-- Tombol Aksi -->
       <div class="flex justify-between mt-6">
-        <a href="/keranjang" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Kembali</a>
-        <button onclick="handlePembayaran()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+        <a href="/pembayaran/1" class="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition duration-300">Kembali</a>
+        <button onclick="handlePembayaran()" class="bg-green-700 text-white px-6 py-2 rounded-full hover:bg-green-800 transition duration-300">
           Bayar
         </button>
       </div>
@@ -88,8 +70,8 @@
   <script>
     function handlePembayaran() {
       Swal.fire({
-        title: 'Pembayaran Berhasil!',
-        text: 'Pesanan Anda telah diproses.',
+        title: 'Pesanan Berhasil!',
+        text: 'lihatkan bukti pembayaran anda ketika mengambil pesanan.',
         icon: 'success',
         confirmButtonText: 'Lihat Pesanan'
       }).then((result) => {
@@ -99,6 +81,12 @@
       });
     }
   </script>
+
+<!--FOOTER-->
+  <footer class="bg-green-600 text-white p-4 mt-8 fixed bottom-0 w-full text-center">
+    <p>© 2025 SIRASO BC - Universitas Andalas</p>
+  </footer>
+
 
 </body>
 </html>

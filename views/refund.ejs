@@ -1,0 +1,50 @@
+<!-- refund.ejs -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengajuan Refund</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    < <!-- Header -->
+    <%- include('partials/header') %> <!-- Menggunakan partial header.ejs -->
+
+    <div class="container mx-auto mt-10 bg-white p-8 shadow-lg rounded-lg">
+        <h1 class="text-2xl font-semibold mb-5">Pengembalian Dana (Refund)</h1>
+        <p class="text-gray-600 mb-5">Ajukan pengembalian dana untuk pesanan yang bermasalah atau lihat status pengajuan refund anda</p>
+
+        <form action="/refund" method="POST" enctype="multipart/form-data">
+            <!-- Input untuk user_id, dapat disesuaikan dengan ID pengguna yang sedang login -->
+            <input type="hidden" name="user_id" value="1" /> <!-- Ganti dengan ID pengguna sesuai dengan sesi atau data pengguna -->
+
+            <div class="mb-4">
+                <label for="bukti" class="block text-lg font-medium text-gray-700">Upload Bukti (Foto/Dokumen)</label>
+                <input type="file" id="bukti" name="bukti" class="mt-2 block w-full text-sm text-gray-500 border rounded-md" accept=".jpg,.jpeg,.png,.pdf,.docx,.doc" required />
+            </div>
+            <div class="mb-4">
+                <label for="nomor_rekening" class="block text-lg font-medium text-gray-700">Nomor Rekening</label>
+                <input type="text" id="nomor_rekening" name="nomor_rekening" class="mt-2 block w-full text-sm text-gray-700 border rounded-md" required />
+            </div>
+            <div class="mb-4">
+                <label for="nama_bank" class="block text-lg font-medium text-gray-700">Nama Bank</label>
+                <input type="text" id="nama_bank" name="nama_bank" class="mt-2 block w-full text-sm text-gray-700 border rounded-md" required />
+            </div>
+            <div class="mb-4">
+                <label for="alasan" class="block text-lg font-medium text-gray-700">Alasan</label>
+                <textarea id="alasan" name="alasan" rows="4" class="mt-2 block w-full text-sm text-gray-700 border rounded-md" required></textarea>
+            </div>
+
+            <button type="submit" class="bg-green-700 text-white py-2 px-6 rounded-md">Ajukan Refund</button>
+            <a href="/reset-form" class="ml-4 text-gray-500 underline">Reset Form</a>
+        </form>
+    </div>
+
+<!--FOOTER-->
+  <footer class="bg-green-600 text-white p-4 mt-8 fixed bottom-0 w-full text-center">
+    <p>© 2025 SIRASO BC - Universitas Andalas</p>
+  </footer>
+
+</body>
+</html>
