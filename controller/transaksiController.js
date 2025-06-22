@@ -71,23 +71,38 @@ exports.cetakBukti = async (req, res) => {
         .end(pdfData);
     });
 
-    doc.fontSize(18).text('Bukti Pembayaran', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12);
-    doc.text(`No. Transaksi : TRX${String(transaksi.transaction_id).padStart(3, '0')}`);
-    doc.text(`Nama          : ${transaksi.user.fullname}`);
-    doc.text(`Tanggal       : ${transaksi.tanggal_transaksi.toLocaleString('id-ID')}`);
-    doc.text(`Metode Bayar  : ${transaksi.metode_pembayaran}`);
-    doc.moveDown().text('Detail Pesanan:');
+    // Menyesuaikan desain PDF seperti gambar yang diberikan
+    doc.fillColor('green')
+      .fontSize(18)
+      .text('BUKTI PEMBAYARAN', { align: 'center' });
 
+    doc.moveDown(0.5);
+    doc.fontSize(12)
+      .text(`No. Transaksi: #TRX${String(transaksi.transaction_id).padStart(3, '0')}`)
+      .text(`Tanggal: ${transaksi.tanggal_transaksi.toLocaleString('id-ID')}`)
+      .text(`Metode Pembayaran: ${transaksi.metode_pembayaran}`)
+      .moveDown();
+
+    // Ringkasan Pesanan
+    doc.text('Ringkasan Pesanan:', { underline: true })
+      .moveDown(0.5);
+
+    // Menambahkan tabel item pesanan
     items.forEach((item) => {
       const subtotal = parseFloat(item.menu.harga) * item.jumlah;
       doc.text(`- ${item.jumlah}x ${item.menu.nama_makanan} = Rp ${subtotal.toLocaleString('id-ID')}`);
     });
 
     doc.moveDown();
-    doc.text(`Biaya Layanan : Rp ${biayaLayanan.toLocaleString('id-ID')}`);
-    doc.text(`Total Bayar   : Rp ${totalBayar.toLocaleString('id-ID')}`);
+    doc.text(`Biaya Layanan: Rp ${biayaLayanan.toLocaleString('id-ID')}`)
+      .text(`Total Pembayaran: Rp ${totalBayar.toLocaleString('id-ID')}`)
+      .moveDown();
+
+    // Footer
+    doc.text('Terimakasih Atas Pesanan Anda!')
+      .text('Bussiness Center UNAND | Universitas Andalas', { align: 'center' })
+      .text(`Dokumen ini dicetak pada ${new Date().toLocaleString('id-ID')}`, { align: 'center' });
+
     doc.end();
   } catch (err) {
     console.error('Gagal cetak bukti:', err);

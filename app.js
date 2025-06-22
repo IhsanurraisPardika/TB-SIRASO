@@ -6,6 +6,11 @@ const session = require('express-session');
 const {PrismaClient} = require('@prisma/client'); // Mengimpor Prisma Client
 const orderRoutes = require('./routes/orderRoutes');
 const transaksiRoutes = require('./routes/transaksiRoutes');
+const refundRoutes = require('./routes/refundRoutes');  // pastikan path-nya sesuai
+const historyRoutes = require('./routes/historyRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+
+
 
 const app = express();
 const port = 3000; // Port yang akan digunakan oleh server
@@ -40,6 +45,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Middleware session
 app.use(session({
@@ -54,6 +61,9 @@ app.use('/', indexRouter);  // Menggunakan rute untuk halaman utama
 app.use('/users', usersRouter); // Menggunakan rute untuk login dan registrasi
 app.use('/', orderRoutes);
 app.use('/', transaksiRoutes);
+app.use('/', refundRoutes);// Menggunakan routes untuk refund
+app.use('/history', historyRoutes); // history
+app.use('/pembayaran', paymentRoutes);
 
 // Login route
 app.post('/login', async (req, res) => {
