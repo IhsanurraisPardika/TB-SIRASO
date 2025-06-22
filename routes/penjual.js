@@ -5,6 +5,33 @@ const prisma = new PrismaClient();
 
 const penjualController = require('../controller/penjualController');
 
+
+// GET: Tampilkan form login penjual
+router.get('/login', (req, res) => {
+  res.render('penjual/loginPenjual', { error: null });
+});
+
+// POST: Proses login penjual
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const seller = await prisma.seller.findUnique({ where: { username } });
+
+    if (!seller || seller.password !== password) {
+      return res.render('penjual/loginPenjual', { error: 'Username atau password salah' });
+    }
+
+    req.session.seller = seller; // Set session penjual
+    res.redirect('/penjual/kelolamenu');
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).send('Terjadi kesalahan saat login');
+  }
+});
+
+
+
 // ==== ROUTE PESANAN (dari pesananP.js) ====
 router.get('/pesanan', async (req, res) => {
   try {
