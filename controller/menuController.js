@@ -1,27 +1,16 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 exports.getMenuByToko = async (req, res) => {
-  const { toko_id } = req.params; // Ubah dari tokoId ke toko_id untuk konsistensi
+  const { tokoId } = req.params;
   try {
-    // Dapatkan semua toko untuk sidebar
     const allTokos = await req.prisma.toko.findMany();
-    
     const toko = await req.prisma.toko.findUnique({
-      where: { toko_id: parseInt(toko_id) },
-      include: { 
-        menu: {
-          where: { available: true } // Ubah dari string 'true' ke boolean true
-        }
-      }
+      where: { toko_id: parseInt(tokoId) },
+      include: { menu: { where: { available: true } } }
     });
-    
     if (!toko) {
-      return res.status(404).render('error', { 
-        error: 'Toko tidak ditemukan',
-        tokos: allTokos // Tetap kirim data toko untuk sidebar
-      });
+      return res.status(404).render('error', { error: 'Toko tidak ditemukan', tokos: allTokos });
     }
-    
     res.render('menu', {
       title: `Menu ${toko.nama_toko}`,
       currentToko: toko,
@@ -30,30 +19,20 @@ exports.getMenuByToko = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).render('error', { 
-      error,
-      tokos: await req.prisma.toko.findMany() // Tetap kirim data toko saat error
-    });
+    res.status(500).render('error', { error, tokos: await req.prisma.toko.findMany() });
   }
 };
 
 exports.filterMenuByCategory = async (req, res) => {
-  const { toko_id, category } = req.params; // Ubah parameter ke toko_id
+  const { tokoId, category } = req.params;
   try {
     const menus = await req.prisma.menu.findMany({
-      where: { 
-        toko_id: parseInt(toko_id),
-        kategori: category,
-        available: true // Ubah ke boolean
-      }
+      where: { toko_id: parseInt(tokoId), kategori: category, available: true }
     });
     res.json(menus);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal Server Error' 
-    });
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 };
 
@@ -62,21 +41,12 @@ exports.getMenusApi = async (req, res) => {
   if (!toko_id) {
     return res.status(400).json({ error: 'Parameter toko_id is required' });
   }
-
   try {
-    const whereClause = {
-      toko_id: parseInt(toko_id),
-      available: true,
-    };
-
+    const whereClause = { toko_id: parseInt(toko_id), available: true };
     if (category && category !== 'all') {
-      whereClause.kategori = category;
+      whereClause.kategori = category.toLowerCase();
     }
-
-    const menus = await req.prisma.menu.findMany({
-      where: whereClause,
-      orderBy: { nama_makanan: 'asc' },
-    });
+    const menus = await req.prisma.menu.findMany({ where: whereClause, orderBy: { nama_makanan: 'asc' } });
     res.json(menus);
   } catch (error) {
     console.error('Error fetching menus for API:', error);
