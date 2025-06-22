@@ -156,16 +156,11 @@
         emptyState.classList.add('hidden');
         
         fetch(`/api/menus?toko_id=${cafe.id}&category=${currentCategory}`)
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-          })
+          .then(response => response.json())
           .then(data => {
             loadingIndicator.classList.add('hidden');
             
-            if (data && data.length > 0) {
+            if (data.length > 0) {
               data.forEach(menu => {
                 const menuItem = document.createElement('div');
                 menuItem.className = 'bg-white rounded-lg shadow-md overflow-hidden menu-item hover:shadow-lg';
@@ -204,12 +199,11 @@
             }
           })
           .catch(error => {
-            console.error('Error fetching menu:', error);
+            console.error('Error:', error);
             loadingIndicator.classList.add('hidden');
             menuGrid.innerHTML = `
               <div class="col-span-full text-center py-10">
-                <p class="text-red-500">Terjadi kesalahan saat memuat menu. Silakan periksa koneksi atau coba lagi.</p>
-                <p class="text-xs text-gray-400 mt-2">Error: ${error.message}</p>
+                <p class="text-red-500">Terjadi kesalahan saat memuat menu. Silakan coba lagi.</p>
               </div>
             `;
           });
