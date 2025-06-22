@@ -1,6 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-
 exports.getMenuByToko = async (req, res) => {
   const { toko_id } = req.params; // Ubah dari tokoId ke toko_id untuk konsistensi
   try {

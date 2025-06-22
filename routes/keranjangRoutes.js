@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const keranjangController = require('../controllers/keranjangController');
+const keranjangController = require('../controller/keranjangController');
 
 router.get('/', keranjangController.getKeranjangByUser);
 router.post('/add', keranjangController.addToKeranjang);
