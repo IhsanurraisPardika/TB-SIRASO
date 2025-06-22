@@ -15,8 +15,6 @@ const historyRoutes = require('./routes/historyRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 
 
-
-
 const app = express();
 const port = 3000;
 const prisma = new PrismaClient();
@@ -29,6 +27,9 @@ const transaksiRoutes = require('./routes/transaksiRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const keranjangRoutes = require('./routes/keranjangRoutes');
 const apiRoutes = require('./routes/apiRoutes');
+
+require('dotenv').config(); // Menggunakan dotenv untuk mengelola variabel lingkungan
+
 
 // Konfigurasi view engine
 app.set('views', path.join(__dirname, 'views'));
