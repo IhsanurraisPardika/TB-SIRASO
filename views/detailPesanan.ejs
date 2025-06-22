@@ -22,6 +22,7 @@
         <p class="text-gray-600 mt-4 text-center"><%= menu.deskripsi || 'Tidak ada deskripsi.' %></p>
       </div>
 
+
       <!-- Order Form -->
       <div class="md:w-1/2 bg-green-700 text-white rounded-2xl shadow-lg p-8">
         <h1 class="text-3xl font-bold mb-6">Rincian Pesanan</h1>
@@ -31,6 +32,16 @@
             <label class="block text-lg font-medium mb-2">Nama Menu:</label>
             <p class="text-xl font-semibold"><%= menu.nama_makanan %></p>
           </div>
+          
+  <!-- ====== Header ====== -->
+  <header class="bg-green-800 text-white py-4 px-6 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Detail Pesanan</h1>
+    <nav>
+      <a href="/"        class="ml-4 hover:underline">Home</a>
+      <a href="/pesanan" class="ml-4 hover:underline">Pesanan Saya</a>
+    </nav>
+  </header>
+
 
           <div>
             <label for="jumlah" class="block text-lg font-medium mb-2">Jumlah:</label>
@@ -82,6 +93,7 @@
         }
       });
 
+
       increaseBtn.addEventListener('click', () => {
         let currentQty = parseInt(qtyInput.value);
         const maxQty = parseInt(qtyInput.max);
@@ -125,5 +137,28 @@
       });
     });
   </script>
+
+    <!-- ---------- Tombol Aksi ---------- -->
+    <div class="flex justify-end gap-4 mt-8">
+       <a href="/users/home" class="bg-gray-500 text-white px-5 py-2 rounded hover:bg-gray-600">Kembali</a>
+      <a href="/pesanan/<%= transaksi.transaction_id %>/cetak"
+         class="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700">
+        Cetak Bukti
+      </a>
+    </div>
+
+     <!-- (Tombol Riwayat Transaksi) -->
+    <div class="w-1/3 pl-4 flex flex-col justify-start items-start">
+      <a href="/history" class="text-blue-500 hover:text-blue-700 font-medium mt-6">
+        Riwayat Transaksi
+      </a>
+    </div>
+
+  </main>
+
+<!--FOOTER-->
+<footer class="bg-green-800 text-white p-4 mt-8 text-center">
+    <p>© 2025 SIRASO BC - Universitas Andalas</p>
+  </footer>
 </body>
 </html>

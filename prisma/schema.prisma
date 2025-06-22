@@ -8,6 +8,7 @@ datasource db {
 }
 
 model User {
+
   user_id      Int            @id @default(autoincrement())
   fullname     String
   username     String         @unique
@@ -57,7 +58,8 @@ model Transactions {
   tanggal_transaksi    DateTime        @default(now())
   bukti_pembayaran     String?
   riwayat_pengembalian String?
-  pickup_schedule      PickupSchedule?
+  pickup_schedule    PickupSchedule?
+  refundRequests RefundRequests[] // Relasi balik ke RefundRequests
 }
 
 model PickupSchedule {
@@ -100,8 +102,32 @@ model Discounts {
 }
 
 model Toko {
+
   toko_id   Int    @id @default(autoincrement())
   nama_toko String @unique
   alamat    String
   menu      Menu[] // Relasi satu ke banyak dengan Menu
+  toko_id       Int      @id @default(autoincrement())
+  nama_toko     String   @unique
+  alamat        String
+  menu          Menu[]   // Relasi satu ke banyak dengan Menu
+}
+
+model RefundRequests {
+  refund_id          Int       @id @default(autoincrement())
+  user_id            Int
+  transaction_id     Int
+  nomor_rekening     String
+  nama_bank          String
+  alasan             String
+  bukti              String
+  status             String   @default("Pending")
+  tanggal_pengajuan  DateTime @default(now())
+  
+  // Relasi dengan tabel User
+  user               User     @relation(fields: [user_id], references: [user_id])
+  
+  // Relasi dengan tabel Transactions
+  transaction        Transactions @relation(fields: [transaction_id], references: [transaction_id])
+
 }
