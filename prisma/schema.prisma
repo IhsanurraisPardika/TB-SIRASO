@@ -23,18 +23,21 @@ model User {
 }
 
 model Menu {
-  menu_id      Int         @id @default(autoincrement())
-  nama_makanan String
-  deskripsi    String?
-  kategori     String
-  harga        Float
-  stok         Int
-  gambar_url   String?
-  available    Boolean     @default(true)
-  toko         Toko        @relation(fields: [toko_id], references: [toko_id])
-  toko_id      Int
-  keranjang    Keranjang[] //relasi balik keranjang
-  reviews      Review[] // relasi balik review
+  menu_id        Int       @id @default(autoincrement())
+  nama_makanan   String
+  deskripsi      String
+  kategori       String
+  harga          Int
+  stok           Int
+  gambar_url     String
+  rating         Float
+  available      Boolean
+  bahan          String
+  toko           Toko      @relation(fields: [toko_id], references: [toko_id]) // Menambahkan relasi dengan Toko
+  toko_id        Int       // Menyimpan ID toko (cafe)
+  reviews        Review[]  
+  keranjang      Keranjang[]
+
 }
 
 model Keranjang {
@@ -59,6 +62,7 @@ model Transactions {
   bukti_pembayaran     String?
   riwayat_pengembalian String?
   pickup_schedule    PickupSchedule?
+  status              String   @default("Menunggu")
   refundRequests RefundRequests[] // Relasi balik ke RefundRequests
 }
 
@@ -111,6 +115,15 @@ model Toko {
   nama_toko     String   @unique
   alamat        String
   menu          Menu[]   // Relasi satu ke banyak dengan Menu
+   seller        Seller?  // Relasi satu ke satu dengan Seller (penjual)
+}
+
+model Seller {
+  seller_id    Int      @id @default(autoincrement())  // ID Penjual
+  username     String   @unique                       // Username Penjual
+  password     String   // Password Penjual
+  toko         Toko     @relation(fields: [toko_id], references: [toko_id]) // Relasi dengan Toko
+  toko_id      Int      @unique                       // ID Toko yang dimiliki oleh penjual, ditandai dengan @unique
 }
 
 model RefundRequests {

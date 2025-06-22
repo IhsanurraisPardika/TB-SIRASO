@@ -5,6 +5,9 @@ const bcrypt = require('bcrypt');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+
 // Halaman login
 router.get('/login', (req, res) => {
   res.render('login', { error: null }); // Pastikan halaman login render dengan benar
@@ -173,6 +176,99 @@ router.get('/', (req, res) => {
 
 // Rute untuk halaman pesanan
 router.get('/pesanan', async (req, res) => {  
+ 
+  res.render('pesanan', { Menu: Menu, jumlah: jumlah }); // Kirim data ke halaman pesanan
+});
+
+router.get('/menu', async (req, res) => {
+    try {
+        const Menu = await prisma.menu.findMany();
+        console.log(Menu); // Menampilkan data menu di console untuk debugging
+        res.json(Menu);
+    } catch (error) {
+        console.error('Error fetching menu:', error);
+        res.status(500).json({ error: 'Terjadi kesalahan saat mengambil menu' });
+    }
+});
+
+
+router.post('/keranjang', async (req, res) => {
+    const { userId, menuId, jumlah, waktuPengambilan } = req.body;
+
+    try {
+    // menambahkan makanan dalam keranjang
+        const keranjang = await prisma.keranjang.create({
+            data: {
+                userId: userId,
+                menuId: menuId,
+                jumlah: jumlah,
+                waktuPengambilan: new Date (waktuPengambilan),
+            },
+        });
+        res.json(keranjang); // Mengembalikan data keranjang yang baru dibuat
+    } catch (error) {
+      res.status(500).json({ error: 'Gagal menambahkan makanan ke keranjang' });
+    }
+});
+
+router.post('/transaksi', async (req, res) => {
+    const { userId, keranjangIds } = req.body;
+
+    try {
+      const transaksi = await prisma.transaction.create({
+        data: {
+          user_id:userId, 
+          status: 'dipesan',
+        },
+      });
+
+      // menambahkan item ke transaksi
+      for (const keranjangId of keranjangIds) {
+            const keranjang = await prisma.keranjang.findUnique({ where: { keranjang_id: keranjangId } });
+            
+            await prisma.detail_transaksi.create({
+                data: {
+                    transaksi_id: transaksi.transaction_id,
+                    menu_id: keranjang.menu_id,
+                    jumlah: keranjang.jumlah,
+                    harga: keranjang.jumlah * (await prisma.menu.findUnique({ where: { menu_id: keranjang.menu_id } })).harga,
+                },
+            });
+        }
+        
+        res.json({ message: 'Transaksi berhasil diproses', transaksi });
+    } catch (error) {
+        res.status(500).json({ error: 'Gagal memproses transaksi' });
+    }
+});
+
+// Memeriksa status pesanan
+router.get('/status/:transactionId', async (req, res) => {
+    const { transactionId } = req.params;
+    
+    try {
+        const transaksi = await prisma.transactions.findUnique({
+            where: { transaction_id: parseInt(transactionId) },
+            include: {
+                detail_transaksi: true, // Menampilkan detail transaksi (makanan yang dipesan)
+            },
+        });
+        
+        if (!transaksi) {
+            return res.status(404).json({ error: 'Pesanan tidak ditemukan' });
+        }
+        
+        res.json({
+            status: transaksi.status,
+            nomor_antrian: transaksi.nomor_antrian, // Anda bisa menambahkan logika untuk nomor antrian
+            detail_transaksi: transaksi.detail_transaksi,
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Gagal mengambil status pesanan' });
+    }
+});
+
+ 
   res.render('pesanan') // Kirim data ke halaman pesanan
 });
 
@@ -272,14 +368,16 @@ router.get('/status/:transactionId', async (req, res) => {
     }
 });
 
+ 
 // Menggenerate PDF untuk pesanan
 router.get('/generate-pdf/:transactionId', async (req, res) => {
     const { transactionId } = req.params;
     
-    try {
+    try {          
         const transaksi = await req.prisma.transactions.findUnique({
             where: { transaction_id: parseInt(transactionId) },
             include: { pickup_schedule: true },
+
         });
         
         if (!transaksi) {
@@ -305,6 +403,18 @@ router.get('/generate-pdf/:transactionId', async (req, res) => {
         res.status(500).json({ error: 'Gagal membuat PDF' });
     }
 });
+
+
+router.get('/pesanan', (req, res) => {
+  // Cek apakah user sudah login
+  if (!req.session.user) {
+    return res.redirect('/users/login'); // Jika belum login, redirect ke halaman login
+  }
+
+  // Render halaman pesanan jika user sudah login
+  res.render('pesanan', { user: req.session.user });
+});
+
 
 router.post('/pesanan', async (req, res) => {
   res.render('pesanan', { user: req.session.user }); // Render halaman pesanan dengan data user

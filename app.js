@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
 
+
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
@@ -35,12 +36,32 @@ require('dotenv').config(); // Menggunakan dotenv untuk mengelola variabel lingk
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+
 // Middleware
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// View engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
+// Routing dasar
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const penjualRouter = require('./routes/penjual');
+const pesananPRouter = require('./routes/pesananP');
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
+
+// Routing penjual (Kelola Menu, Pesanan, dll)
+app.use('/penjual', penjualRouter);     // rute seperti /penjual/kelolamenu
+app.use('/penjual/pesanan', pesananPRouter);    // rute seperti /penjual/pesanan
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
@@ -57,7 +78,7 @@ app.use(session({
 app.use((req, res, next) => {
   req.prisma = prisma;
   next();
-=======
+
 
 // Routing untuk halaman utama dan login
 app.use('/', indexRouter);  // Menggunakan rute untuk halaman utama
@@ -68,47 +89,37 @@ app.use('/', refundRoutes);// Menggunakan routes untuk refund
 app.use('/history', historyRoutes); // history
 app.use('/pembayaran', paymentRoutes);
 
-// Login route
+// Login route (dummy)
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-
   try {
-    // Mencari pengguna berdasarkan email
-    const user = await prisma.user({ email });
+    const user = await prisma.user.findUnique({ where: { email } }); // ✅ pakai findUnique
+    if (!user) return res.status(400).json({ error: 'User tidak ditemukan' });
 
-    // Jika user tidak ditemukan
-    if (!user) {
-      return res.status(400).json({ error: 'User tidak ditemukan' });
-    }
-
-    // Memverifikasi password
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) return res.status(400).json({ error: 'Password salah' });
 
-    if (!isPasswordValid) {
-      return res.status(400).json({ error: 'Password salah' });
-    }
-
-    // Mengatur session setelah login berhasil
-    req.session.user = user; // Menyimpan user ke session
-
-    // Redirect ke halaman home setelah login berhasil
+    req.session.userId = user.id; // Simpan ID saja, lebih aman
     res.redirect('/home');
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Login gagal, coba lagi.' });
+    res.status(500).json({ error: 'Login gagal' });
   }
 });
 
 // Home route
 app.get('/home', (req, res) => {
-  // Cek apakah user sudah login
-  if (!req.session.userId) {
-    return res.redirect('/users/login'); // Jika belum login, alihkan ke halaman login
-  }
-
-  // Menampilkan halaman home jika user sudah login
+  if (!req.session.userId) return res.redirect('/users/login');
   res.render('home', { userId: req.session.userId });
 });
+
+// Auth routes
+app.get('/users/login', (req, res) => res.render('login'));
+app.get('/users/register', (req, res) => res.render('register'));
+
+// Error handler
+app.use((req, res, next) => {
+  const err = new Error('Not Found');
 
 // Halaman login
 app.get('/users/login', (req, res) => {
@@ -141,13 +152,8 @@ app.use('/menu', menuRoutes);
 app.use('/keranjang', keranjangRoutes);
 app.use('/api', apiRoutes);
 
-// Penanganan error
-app.use(function(req, res, next) {
-  const err = new Error('Halaman Tidak Ditemukan');
-  err.status = 404;
-  next(err);
-});
 
+// Server start
 app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
