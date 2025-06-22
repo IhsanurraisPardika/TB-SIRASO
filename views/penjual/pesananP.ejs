@@ -44,10 +44,10 @@
     <%= item.menu.nama_makanan %> - <%= item.jumlah %>x<br>
   <% }) %>
 </td>
-            <!-- <td class="p-3 text-sm">
+            <td class="p-3 text-sm">
               Rp. <%= trx.total_price.toLocaleString('id-ID') %>
             </td>
-            <td class="p-3 space-y-1">
+            <!-- <td class="p-3 space-y-1">
               <form action="/penjual/pesanan/<%= trx.transaction_id %>/siap" method="POST">
                 <button class="bg-green-600 text-white px-3 py-1 rounded text-sm">Siap</button>
               </form>
@@ -64,6 +64,7 @@
   <span class="text-yellow-600 font-semibold">Menunggu</span>
 <% } %>
             </td> -->
+
           </tr>
         <% }) %>
       </tbody>

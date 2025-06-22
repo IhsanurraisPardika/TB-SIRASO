@@ -4,13 +4,12 @@
   <meta charset="UTF-8" />
   <title>Kelola Menu - Penjual</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="flex min-h-screen bg-white">
 
   <!-- Sidebar -->
-<%- include('../partials/sidebarpenjual', { activePage: 'kelolamenu' }) %>
-
+  <%- include('../partials/sidebarpenjual', { activePage: 'kelolamenu' }) %>
 
   <!-- Main Content -->
   <main class="w-4/5 p-6 bg-gradient-to-b from-green-100 to-white rounded-l-3xl">
@@ -74,17 +73,23 @@
             <td class="p-4">Rp<%= item.harga.toLocaleString() %></td>
             <td class="p-4"><%= item.stok %></td>
             <td class="p-4">⭐ <%= item.rating %></td>
-            <td class="p-4 text-center space-x-2">
-              
-                <a href="/penjual/editmenu/<%= item.menu_id %>" class="inline-flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded transition">
-  <i class="fa-solid fa-pen"></i>
-</a>
-
-              <form action="/penjual/hapusmenu/<%= item.menu_id %>" method="POST" onsubmit="return confirm('Yakin ingin menghapus menu ini?')">
-  <button type="submit" class="inline-flex items-center justify-center w-8 h-8 text-white bg-red-600 hover:bg-red-700 rounded transition">
-    <i class="fa-solid fa-trash"></i>
-  </button>
-</form>
+            <td class="p-4">
+              <div class="flex justify-center gap-2">
+                <a href="/penjual/editmenu/<%= item.menu_id %>" 
+                   class="inline-flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded transition"
+                   title="Edit">
+                  <i class="fa-solid fa-pen"></i>
+                </a>
+                <form action="/penjual/hapusmenu/<%= item.menu_id %>" method="POST" 
+                      onsubmit="return confirm('Yakin ingin menghapus menu ini?')" 
+                      class="inline-block">
+                  <button type="submit" 
+                          class="inline-flex items-center justify-center w-8 h-8 text-white bg-red-600 hover:bg-red-700 rounded transition"
+                          title="Hapus">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </div>
             </td>
           </tr>
           <% }) %>
