@@ -3,6 +3,10 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
+
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcrypt');
+require('dotenv').config();
 const {PrismaClient} = require('@prisma/client'); // Mengimpor Prisma Client
 const orderRoutes = require('./routes/orderRoutes');
 const transaksiRoutes = require('./routes/transaksiRoutes');
@@ -12,29 +16,22 @@ const paymentRoutes = require('./routes/paymentRoutes');
 
 
 const app = express();
-const port = 3000; // Port yang akan digunakan oleh server
+const port = 3000;
+const prisma = new PrismaClient();
 
-// Mengimpor routing
-const indexRouter = require('./routes/index'); 
-const usersRouter = require('./routes/users'); 
+// Import rute yang diperlukan
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const orderRoutes = require('./routes/orderRoutes');
+const transaksiRoutes = require('./routes/transaksiRoutes');
+const menuRoutes = require('./routes/menuRoutes');
+const keranjangRoutes = require('./routes/keranjangRoutes');
+const apiRoutes = require('./routes/apiRoutes');
+
 require('dotenv').config(); // Menggunakan dotenv untuk mengelola variabel lingkungan
 
 
-app.post("/addUsers", async (req, res) => {
-  const user = req.body; // Mengambil data user dari request body
-  const result = await prisma.user.create({
-    data: user // Menyimpan data user ke database
-  })
-  res.send(result)
-});  
-
-app.use(session({
-  secret: process.env.SESSION_SECRET, // Mengambil secret dari .env
-  resave: false,
-  saveUninitialized: true,
-}));
-
-// View engine setup
+// Konfigurasi view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
@@ -49,11 +46,18 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware session
 app.use(session({
-  secret: 'ihsan',  // Ganti dengan kunci yang lebih aman
+  secret: process.env.SESSION_SECRET || 'rahasia',
   resave: false,
   saveUninitialized: true,
+  cookie: { secure: false }
 }));
 
+
+// Membuat Prisma client tersedia untuk semua rute
+app.use((req, res, next) => {
+  req.prisma = prisma;
+  next();
+=======
 
 // Routing untuk halaman utama dan login
 app.use('/', indexRouter);  // Menggunakan rute untuk halaman utama
@@ -116,20 +120,43 @@ app.get('/users/register', (req, res) => {
   res.render('register');
 });
 
+// Halaman pesanan
+app.get('/users/pesanan', (req, res) => {
+  // Cek apakah user sudah login
+  if (!req.session.userId) {
+    return res.redirect('/users/login'); // Jika belum login, alihkan ke halaman login
+  }
 
-// Error handling
+  // Menampilkan halaman pesanan jika user sudah login
+  res.render('pesanan', { userId: req.session.userId });
+
+});
+
+// Rute-rute aplikasi
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/order', orderRoutes);
+app.use('/transaksi', transaksiRoutes);
+app.use('/menu', menuRoutes);
+app.use('/keranjang', keranjangRoutes);
+app.use('/api', apiRoutes);
+
+// Penanganan error
 app.use(function(req, res, next) {
-  const err = new Error('Not Found');
+  const err = new Error('Halaman Tidak Ditemukan');
   err.status = 404;
   next(err);
 });
 
+app.use(function(err, req, res, next) {
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
+  res.status(err.status || 500);
+  res.render('error');
+});
 
-
-
-
-// Menjalankan server di localhost:3000
+// Jalankan server
 app.listen(port, () => {
   console.log(`Server berjalan di http://localhost:${port}`);
 });

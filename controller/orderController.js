@@ -56,3 +56,37 @@ exports.getRingkasanPesanan = async (req, res) => {
     res.status(500).send('Terjadi kesalahan saat mengambil ringkasan pembayaran');
   }
 };
+
+exports.getOrderDetail = async (req, res) => {
+    if (!req.session.user) {
+        return res.redirect('/login');
+    }
+    try {
+        const menu = await req.prisma.menu.findUnique({
+            where: { menu_id: parseInt(req.params.id) },
+            include: { toko: true },
+        });
+
+        if (!menu) {
+            return res.status(404).render('error', { message: 'Menu tidak ditemukan' });
+        }
+
+        const formatPrice = (price) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(price);
+        };
+
+        res.render('detailPesanan', {
+            title: `Pesan ${menu.nama_makanan}`,
+            menu,
+            user: req.session.user,
+            formatPrice
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).render('error', { error });
+    }
+};
