@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Pembayaran</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white min-h-screen font-sans">
+
+  < <!-- Header -->
+    <%- include('partials/header') %> <!-- Menggunakan partial header.ejs -->
+
+  <!-- Card Pembayaran -->
+  <div class="max-w-md mx-auto mt-10 bg-white shadow-md rounded-lg border">
+    <div class="bg-green-700 text-white text-center py-2 rounded-t-lg font-semibold">
+      PEMBAYARAN
+    </div>
+    <form action="/pembayaran/<%= transaksi.transaction_id %>" method="POST" class="p-6 space-y-4">
+
+      <!-- Total Harga -->
+      <div>
+        <label class="block font-medium mb-1">Total Harga:</label>
+        <input type="text" readonly
+               class="w-full border rounded-md px-3 py-2 bg-gray-100"
+               value="Rp <%= transaksi.total_price.toLocaleString('id-ID') %>">
+      </div>
+
+      <!-- Metode Pembayaran -->
+      <div>
+        <p class="font-medium mb-2">Pilih metode pembayaran:</p>
+
+        <label class="flex items-center space-x-2 mb-1">
+          <input type="radio" name="metode_pembayaran" value="Transfer" required>
+          <span>Transfer</span>
+        </label>
+        <p class="ml-6 text-sm text-gray-600">BNI: 2345678992</p>
+
+        <label class="flex items-center space-x-2 mt-2">
+          <input type="radio" name="metode_pembayaran" value="Bayar di tempat">
+          <span>Bayar di tempat</span>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-between pt-4">
+        <a href="/keranjang" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Kembali</a>
+        <a href="/selanjutnya"><button type="submit" class="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-green-800">Selanjutnya</button></a>
+      </div>
+
+    </form>
+  </div>
+
+  <!--FOOTER-->
+  <footer class="bg-green-600 text-white p-4 mt-8 fixed bottom-0 w-full text-center">
+    <p>© 2025 SIRASO BC - Universitas Andalas</p>
+  </footer>
+
+
+</body>
+</html>

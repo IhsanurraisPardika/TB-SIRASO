@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ringkasan Pembayaran</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+  < <!-- Header -->
+    <%- include('partials/header') %> <!-- Menggunakan partial header.ejs -->
+
+  <!-- Container -->
+  <div class="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow-lg border border-gray-200">
+    <h2 class="text-2xl font-semibold mb-6 text-center text-green-700">Ringkasan Pembayaran</h2>
+
+    <% if (pesanan.length === 0) { %>
+      <p class="text-center text-red-600 text-sm">
+        ⚠️ Tidak ada data pesanan ditemukan.
+      </p>
+    <% } else { %>
+
+      <p class="mb-4 font-medium text-lg">Pesanan Anda:</p>
+
+      <table class="w-full border text-left mb-4">
+        <thead class="bg-green-700 text-white">
+          <tr>
+            <th class="px-4 py-2 text-center">Nama Barang</th>
+            <th class="px-4 py-2 text-center">Jumlah</th>
+            <th class="px-4 py-2 text-center">Harga</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% pesanan.forEach(item => { %>
+            <tr class="border-t">
+              <td class="px-4 py-2 text-center"><%= item.nama_makanan %></td>
+              <td class="px-4 py-2 text-center"><%= item.jumlah %></td>
+              <td class="px-4 py-2 text-center">Rp <%= item.subtotal.toLocaleString('id-ID') %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+
+      <p class="text-sm text-gray-600 mt-1">
+        <strong>Metode Pembayaran:</strong>
+        <span class="text-green-600"><%= metodePembayaran %></span>
+      </p>
+
+      <p class="mt-4 font-bold text-lg text-green-700">
+        Total Pembayaran: Rp <%= total.toLocaleString('id-ID') %>
+      </p>
+
+      <!-- Tombol Aksi -->
+      <div class="flex justify-between mt-6">
+        <a href="/pembayaran/1" class="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition duration-300">Kembali</a>
+        <button onclick="handlePembayaran()" class="bg-green-700 text-white px-6 py-2 rounded-full hover:bg-green-800 transition duration-300">
+          Bayar
+        </button>
+      </div>
+
+    <% } %>
+  </div>
+
+  <!-- SweetAlert Script -->
+  <script>
+    function handlePembayaran() {
+      Swal.fire({
+        title: 'Pesanan Berhasil!',
+        text: 'lihatkan bukti pembayaran anda ketika mengambil pesanan.',
+        icon: 'success',
+        confirmButtonText: 'Lihat Pesanan'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = '/pesanan/1'; // Ganti 1 dengan ID dinamis kalau perlu
+        }
+      });
+    }
+  </script>
+
+<!--FOOTER-->
+  <footer class="bg-green-600 text-white p-4 mt-8 fixed bottom-0 w-full text-center">
+    <p>© 2025 SIRASO BC - Universitas Andalas</p>
+  </footer>
+
+
+</body>
+</html>
