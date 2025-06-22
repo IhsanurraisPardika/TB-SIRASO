@@ -5,7 +5,7 @@ const { validationResult } = require('express-validator');
 const registerUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).render('register', { error: errors.array().map(e => e.msg).join(', ') });
   }
 
   const { fullname, username, phone, password, status, alamat, email } = req.body;
@@ -14,14 +14,14 @@ const registerUser = async (req, res) => {
     // Validasi password
     const passwordStrength = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
     if (!password.match(passwordStrength)) {
-      return res.status(400).send('Password harus mengandung minimal 8 karakter, angka, dan huruf.');
+      return res.status(400).render('register', { error: 'Password harus mengandung minimal 8 karakter, angka, dan huruf.' });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Simpan ke database
-    const user = await req.prisma.user.create({
+    await req.prisma.user.create({
       data: {
         fullname,
         username,
@@ -34,10 +34,10 @@ const registerUser = async (req, res) => {
     });
 
     // Redirect ke halaman login setelah registrasi berhasil
-    res.redirect('/users/login');
+    res.redirect('/login');
   } catch (error) {
     console.error(error);
-    res.status(500).send('Terjadi kesalahan pada server.');
+    res.status(500).render('register', { error: 'Terjadi kesalahan pada server.' });
   }
 };
 

@@ -5,111 +5,51 @@ const bcrypt = require('bcrypt');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 
-const PDFDocument = require('pdfkit');
-const fs = require('fs');
-
 // Halaman login
 router.get('/login', (req, res) => {
-  res.render('login', { error: null }); // Pastikan halaman login render dengan benar
+  res.render('login', { error: null });
 });
 
 // Proses login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-
-  // Mencari user berdasarkan email
-  req.prisma.user.findUnique({
-    where: { email: email }
-  })
-  .then(user => {
+  try {
+    const user = await req.prisma.user.findUnique({ where: { email } });
     if (!user) {
       return res.render('login', { error: 'Email tidak ditemukan' });
     }
-
-    // Membandingkan password yang dimasukkan dengan password yang terenkripsi
-    bcrypt.compare(password, user.password)
-      .then(isMatch => {
-        if (isMatch) {
-          // Menyimpan data user ke session
-          req.session.user = user;
-
-          // Arahkan ke halaman home setelah login sukses
-          res.redirect('/home');
-        } else {
-          return res.render('login', { error: 'Password salah' });
-        }
-      })
-      .catch(err => {
-        console.error('Error during password comparison:', err);
-        res.status(500).send('Internal Server Error');
-      });
-  })
-  .catch(error => {
-    console.error('Error during login:', error);
-    res.status(500).send('Internal Server Error');
-  });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.render('login', { error: 'Password salah' });
+    }
+    req.session.user = user;
+    res.redirect('/home');
+  } catch (err) {
+    console.error('Error during login:', err);
+    res.status(500).render('login', { error: 'Terjadi kesalahan pada server.' });
+  }
 });
 
 // GET route for the home page
 router.get('/home', async (req, res) => {
-  // Check if the user is logged in by looking for the session
-  if (!req.session.user) {
-    // If not logged in, redirect to the login page
-    return res.redirect('/login');
-  }
-
+  if (!req.session.user) return res.redirect('/login');
   try {
-    // Fetch all stores (toko) to display in the sidebar
     const tokos = await req.prisma.toko.findMany();
-
-    // The rest of the logic for displaying menus based on a selected store
-    // remains the same, but it's now inside the protected route.
-    const { toko_id } = req.query;
-    let currentToko = null;
-    let menus = [];
-
-    if (toko_id) {
-      currentToko = await req.prisma.toko.findUnique({
-        where: { toko_id: parseInt(toko_id) }
-      });
-      
-      if (currentToko) {
-        menus = await req.prisma.menu.findMany({
-          where: {
-            toko_id: parseInt(toko_id),
-            available: true
-          }
-        });
-      }
-    }
-
-    // Render the home page with all the necessary data
     res.render('home', {
-      user: req.session.user, // Pass user information
+      user: req.session.user,
       tokos,
-      currentToko,
-      menus,
-      // Helper function to format prices
-      formatPrice: (price) => {
-        return new Intl.NumberFormat('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-          minimumFractionDigits: 0
-        }).format(price);
-      }
+      currentToko: null,
+      menus: [],
+      formatPrice: (price) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price)
     });
   } catch (error) {
-    // Handle any errors that occur while fetching data
-    console.error('Error loading home page:', error);
-    res.status(500).render('error', { 
-      message: 'Terjadi kesalahan saat memuat data',
-      error: error
-    });
+    res.status(500).render('error', { message: 'Terjadi kesalahan saat memuat data', error });
   }
 });
 
 // pencarian
 router.get('/pencarian', (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
   res.render('pencarian');
 });
 
@@ -148,76 +88,47 @@ router.get('/download_menu', function(req, res, next) {
   res.render('download_menu');
 });
 
-// Post untuk register
-router.post('/register', (req, res) => {
-  const { fullname, username, phone, password, status, alamat, email } = req.body;
+// Register page
+router.get('/register', (req, res) => {
+  res.render('register', { error: null });
+});
 
-  // Cek apakah username sudah ada di database
-  req.prisma.user.findUnique({
-    where: { username: username }
-  })
-  .then(existingUser => {
+// Process register
+router.post('/register', async (req, res) => {
+  const { fullname, username, phone, password, status, alamat, email } = req.body;
+  try {
+    const existingUser = await req.prisma.user.findUnique({ where: { username } });
     if (existingUser) {
-      // Jika username sudah ada, beri pesan error
       return res.render('register', { error: 'Username sudah digunakan' });
     }
-
-    // Enkripsi password menggunakan bcrypt
-    bcrypt.hash(password, 10)
-      .then(hashedPassword => {
-        // Menyimpan pengguna baru di database
-        req.prisma.user.create({
-          data: {
-            fullname: fullname,
-            username: username,
-            phone: phone,
-            password: hashedPassword,  // Simpan password yang sudah terenkripsi
-            status: status,
-            alamat: alamat,
-            email: email,
-          },
-        })
-        .then(newUser => {
-          console.log('User created:', newUser);
-
-          // Setelah registrasi berhasil, arahkan ke halaman login
-          res.redirect('/users/login');
-        })
-        .catch(error => {
-          console.error('Error during user creation:', error);
-          res.status(500).send('Internal Server Error');
-        });
-      })
-      .catch(error => {
-        console.error('Error during password hashing:', error);
-        res.status(500).send('Internal Server Error');
-      });
-  })
-  .catch(error => {
-    console.error('Error during username check:', error);
-    res.status(500).send('Internal Server Error');
-  });
-});
-
-// Rute untuk halaman register
-router.get('/register', (req, res) => {
-  res.render('register', { error: null }); // Menampilkan halaman registrasi
-});
-
-// Arahkan root ke halaman login
-router.get('/', (req, res) => {
-  res.redirect('/login'); // Arahkan root ke halaman login
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await req.prisma.user.create({
+      data: { fullname, username, phone, password: hashedPassword, status, alamat, email },
+    });
+    res.redirect('/login');
+  } catch (err) {
+    console.error('Error during register:', err);
+    res.status(500).render('register', { error: 'Terjadi kesalahan pada server.' });
+  }
 });
 
 // Rute untuk halaman pesanan
-router.get('/pesanan', async (req, res) => {  
- 
-  res.render('pesanan', { Menu: Menu, jumlah: jumlah }); // Kirim data ke halaman pesanan
+router.get('/pesanan', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  try {
+    const keranjang = await req.prisma.keranjang.findMany({
+      where: { user_id: req.session.user.user_id },
+      include: { menu: true }
+    });
+    res.render('pesanan', { items: keranjang, user: req.session.user });
+  } catch (error) {
+    res.status(500).render('error', { error });
+  }
 });
 
 router.get('/menu', async (req, res) => {
     try {
-        const Menu = await prisma.menu.findMany();
+        const Menu = await req.prisma.menu.findMany();
         console.log(Menu); // Menampilkan data menu di console untuk debugging
         res.json(Menu);
     } catch (error) {
@@ -226,13 +137,12 @@ router.get('/menu', async (req, res) => {
     }
 });
 
-
 router.post('/keranjang', async (req, res) => {
     const { userId, menuId, jumlah, waktuPengambilan } = req.body;
 
     try {
     // menambahkan makanan dalam keranjang
-        const keranjang = await prisma.keranjang.create({
+        const keranjang = await req.prisma.keranjang.create({
             data: {
                 userId: userId,
                 menuId: menuId,
@@ -250,7 +160,7 @@ router.post('/transaksi', async (req, res) => {
     const { userId, keranjangIds } = req.body;
 
     try {
-      const transaksi = await prisma.transaction.create({
+      const transaksi = await req.prisma.transaction.create({
         data: {
           user_id:userId, 
           status: 'dipesan',
@@ -259,14 +169,14 @@ router.post('/transaksi', async (req, res) => {
 
       // menambahkan item ke transaksi
       for (const keranjangId of keranjangIds) {
-            const keranjang = await prisma.keranjang.findUnique({ where: { keranjang_id: keranjangId } });
+            const keranjang = await req.prisma.keranjang.findUnique({ where: { keranjang_id: keranjangId } });
             
-            await prisma.detail_transaksi.create({
+            await req.prisma.detail_transaksi.create({
                 data: {
                     transaksi_id: transaksi.transaction_id,
                     menu_id: keranjang.menu_id,
                     jumlah: keranjang.jumlah,
-                    harga: keranjang.jumlah * (await prisma.menu.findUnique({ where: { menu_id: keranjang.menu_id } })).harga,
+                    harga: keranjang.jumlah * (await req.prisma.menu.findUnique({ where: { menu_id: keranjang.menu_id } })).harga,
                 },
             });
         }
@@ -282,7 +192,7 @@ router.get('/status/:transactionId', async (req, res) => {
     const { transactionId } = req.params;
     
     try {
-        const transaksi = await prisma.transactions.findUnique({
+        const transaksi = await req.prisma.transactions.findUnique({
             where: { transaction_id: parseInt(transactionId) },
             include: {
                 detail_transaksi: true, // Menampilkan detail transaksi (makanan yang dipesan)
@@ -303,107 +213,6 @@ router.get('/status/:transactionId', async (req, res) => {
     }
 });
 
- 
-  res.render('pesanan') // Kirim data ke halaman pesanan
-});
-
-router.get('/menu', async (req, res) => {
-    try {
-        const Menu = await req.prisma.menu.findMany();
-        console.log(Menu); // Menampilkan data menu di console untuk debugging
-        res.json(Menu);
-    } catch (error) {
-        console.error('Error fetching menu:', error);
-        res.status(500).json({ error: 'Terjadi kesalahan saat mengambil menu' });
-    }
-});
-
-
-router.post('/keranjang', async (req, res) => {
-    const { userId, menuId, jumlah, waktuPengambilan } = req.body;
-
-    try {
-    // menambahkan makanan dalam keranjang
-        const keranjang = await req.prisma.keranjang.create({
-            data: {
-                user_id: userId,
-                menu_id: menuId,
-                jumlah: jumlah,
-                waktu_pengambilan: new Date(waktuPengambilan),
-            },
-        });
-        res.json(keranjang); // Mengembalikan data keranjang yang baru dibuat
-    } catch (error) {
-      res.status(500).json({ error: 'Gagal menambahkan makanan ke keranjang' });
-    }
-});
-
-router.post('/transaksi', async (req, res) => {
-    const { userId, keranjangIds } = req.body;
-
-    try {
-      const transaksi = await req.prisma.transactions.create({
-        data: {
-          user_id: userId, 
-          total_price: 0, // Will be calculated
-          metode_pembayaran: 'cash',
-          status_pembayaran: 'pending',
-        },
-      });
-
-      // Calculate total price and process items
-      let totalPrice = 0;
-      for (const keranjangId of keranjangIds) {
-            const keranjang = await req.prisma.keranjang.findUnique({ 
-                where: { keranjang_id: keranjangId },
-                include: { menu: true }
-            });
-            
-            if (keranjang) {
-                totalPrice += keranjang.jumlah * keranjang.menu.harga;
-            }
-        }
-        
-        // Update transaction with total price
-        await req.prisma.transactions.update({
-            where: { transaction_id: transaksi.transaction_id },
-            data: { total_price: totalPrice }
-        });
-        
-        res.json({ message: 'Transaksi berhasil diproses', transaksi });
-    } catch (error) {
-        console.error('Transaction error:', error);
-        res.status(500).json({ error: 'Gagal memproses transaksi' });
-    }
-});
-
-// Memeriksa status pesanan
-router.get('/status/:transactionId', async (req, res) => {
-    const { transactionId } = req.params;
-    
-    try {
-        const transaksi = await req.prisma.transactions.findUnique({
-            where: { transaction_id: parseInt(transactionId) },
-            include: {
-                pickup_schedule: true,
-            },
-        });
-        
-        if (!transaksi) {
-            return res.status(404).json({ error: 'Pesanan tidak ditemukan' });
-        }
-        
-        res.json({
-            status: transaksi.status_pembayaran,
-            total_price: transaksi.total_price,
-            pickup_schedule: transaksi.pickup_schedule,
-        });
-    } catch (error) {
-        res.status(500).json({ error: 'Gagal mengambil status pesanan' });
-    }
-});
-
- 
 // Menggenerate PDF untuk pesanan
 router.get('/generate-pdf/:transactionId', async (req, res) => {
     const { transactionId } = req.params;
@@ -439,20 +248,35 @@ router.get('/generate-pdf/:transactionId', async (req, res) => {
     }
 });
 
-
-router.get('/pesanan', (req, res) => {
-  // Cek apakah user sudah login
-  if (!req.session.user) {
-    return res.redirect('/users/login'); // Jika belum login, redirect ke halaman login
-  }
-
-  // Render halaman pesanan jika user sudah login
-  res.render('pesanan', { user: req.session.user });
-});
-
-
 router.post('/pesanan', async (req, res) => {
   res.render('pesanan', { user: req.session.user }); // Render halaman pesanan dengan data user
+});
+
+// Keranjang (Pesanan Saya) - protected
+router.get('/keranjang', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  try {
+    const keranjang = await req.prisma.keranjang.findMany({
+      where: { user_id: req.session.user.user_id },
+      include: { menu: true }
+    });
+    const formatPrice = (price) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
+    res.render('keranjang', { title: 'Keranjang Belanja', items: keranjang, formatPrice });
+  } catch (error) {
+    res.status(500).render('error', { error });
+  }
+});
+
+// Pembayaran (Ringkasan) - protected
+router.get('/pembayaran', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  // Dummy data, sesuaikan dengan transaksi user
+  res.render('ringkasan', { pesanan: [], total: 0, metodePembayaran: '', kodeDiskon: '' });
+});
+
+// Redirect root to login
+router.get('/', (req, res) => {
+  res.redirect('/login');
 });
 
 module.exports = router;

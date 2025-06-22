@@ -9,35 +9,23 @@ const loginUser = async (req, res) => {
     return res.render('login', { error: errors.array().map(err => err.msg).join(", ") }); // Menampilkan semua error
   }
 
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    // Mencari user berdasarkan username
-    const user = await req.prisma.user.findUnique({
-      where: { username: username },
-    });
-
-    // Jika user tidak ditemukan
+    // Cari user berdasarkan email
+    const user = await req.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return res.render('login', { error: 'Username atau password salah' });
+      return res.render('login', { error: 'Email tidak ditemukan' });
     }
-
-    // Membandingkan password yang diinput dengan yang ada di database
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    // Jika password tidak valid
     if (!isPasswordValid) {
-      return res.render('login', { error: 'Username atau password salah' });
+      return res.render('login', { error: 'Password salah' });
     }
-
-    // Jika login berhasil, simpan user ke session
     req.session.user = user;
-
-    // Arahkan ke halaman home setelah login sukses
     res.redirect('/home');
   } catch (error) {
     console.error('Error during login:', error);
-    res.status(500).send('Terjadi kesalahan pada server.');
+    res.status(500).render('login', { error: 'Terjadi kesalahan pada server.' });
   }
 };
 
